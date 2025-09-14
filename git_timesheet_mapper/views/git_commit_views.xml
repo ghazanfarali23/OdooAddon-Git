@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Git Commit Form View -->
+    <record id="view_git_commit_form" model="ir.ui.view">
+        <field name="name">git.commit.form</field>
+        <field name="model">git.commit</field>
+        <field name="arch" type="xml">
+            <form string="Git Commit">
+                <header>
+                    <button name="action_create_mapping" string="Create Mapping" type="object" 
+                            class="btn-primary" icon="fa-link"
+                            attrs="{'invisible': [('is_mapped', '=', True)]}"/>
+                    <button name="action_view_mappings" string="View Mappings" type="object" 
+                            class="btn-info" icon="fa-eye"
+                            attrs="{'invisible': [('mapping_count', '=', 0)]}"/>
+                    <button name="action_open_commit_url" string="Open in Git" type="object" 
+                            class="btn-secondary" icon="fa-external-link"/>
+                    <field name="commit_type" widget="statusbar" 
+                           statusbar_visible="feature,bugfix,refactor,docs,test,chore"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_mappings" type="object" class="oe_stat_button" icon="fa-link">
+                            <field name="mapping_count" widget="statinfo" string="Mappings"/>
+                        </button>
+                        <button name="action_view_files" type="object" class="oe_stat_button" icon="fa-file-code-o">
+                            <field name="files_changed" widget="statinfo" string="Files"/>
+                        </button>
+                        <button name="action_view_changes" type="object" class="oe_stat_button" icon="fa-plus-minus">
+                            <field name="total_changes" widget="statinfo" string="Changes"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <label for="commit_message" class="oe_edit_only"/>
+                        <h1><field name="commit_message_short" readonly="1"/></h1>
+                        <h3>
+                            <field name="commit_hash" readonly="1" widget="CopyClipboardChar"/>
+                        </h3>
+                    </div>
+                    
+                    <group>
+                        <group name="commit_info">
+                            <field name="repository_id" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                            <field name="author_name" readonly="1"/>
+                            <field name="author_email" readonly="1" widget="email"/>
+                            <field name="commit_date" readonly="1"/>
+                        </group>
+                        <group name="mapping_info">
+                            <field name="is_mapped" readonly="1" widget="boolean"/>
+                            <field name="first_mapped_date" readonly="1" 
+                                   attrs="{'invisible': [('is_mapped', '=', False)]}"/>
+                            <field name="last_mapped_date" readonly="1"
+                                   attrs="{'invisible': [('is_mapped', '=', False)]}"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Commit Details" name="details_group">
+                        <field name="commit_message" nolabel="1" readonly="1" 
+                               widget="text" options="{'no_resize': true}"/>
+                    </group>
+                    
+                    <group string="Change Statistics" name="stats_group" col="4">
+                        <field name="files_changed" readonly="1"/>
+                        <field name="lines_added" readonly="1" widget="integer"/>
+                        <field name="lines_deleted" readonly="1" widget="integer"/>
+                        <field name="total_changes" readonly="1" widget="integer"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Mappings" name="mappings" 
+                              attrs="{'invisible': [('mapping_count', '=', 0)]}">
+                            <field name="mapping_ids" readonly="1" nolabel="1">
+                                <tree string="Timesheet Mappings" create="false" edit="false">
+                                    <field name="timesheet_line_id"/>
+                                    <field name="project_id"/>
+                                    <field name="task_id"/>
+                                    <field name="mapped_by"/>
+                                    <field name="mapping_date"/>
+                                    <field name="mapping_method"/>
+                                    <field name="description"/>
+                                    <button name="action_remove_mapping" string="Remove" type="object" 
+                                            icon="fa-trash" class="btn-link text-danger"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <page string="File Changes" name="file_changes">
+                            <field name="file_changes" readonly="1" nolabel="1" widget="text"/>
+                            <div class="mt-3" t-if="commit_url">
+                                <a class="btn btn-link" target="_blank" t-att-href="commit_url">
+                                    <i class="fa fa-external-link"/> View full diff on <t t-esc="repository_id.repository_type"/>
+                                </a>
+                            </div>
+                        </page>
+                        
+                        <page string="Commit Metadata" name="metadata">
+                            <group col="2">
+                                <group>
+                                    <field name="short_hash" readonly="1"/>
+                                    <field name="commit_url" readonly="1" widget="url"/>
+                                    <field name="tree_sha" readonly="1"/>
+                                    <field name="parent_sha" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="committer_name" readonly="1"/>
+                                    <field name="committer_email" readonly="1" widget="email"/>
+                                    <field name="committer_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Git Commit Tree View -->
+    <record id="view_git_commit_tree" model="ir.ui.view">
+        <field name="name">git.commit.tree</field>
+        <field name="model">git.commit</field>
+        <field name="arch" type="xml">
+            <tree string="Git Commits" multi_edit="1" sample="1" 
+                  decoration-success="is_mapped == True"
+                  decoration-muted="is_mapped == False">
+                <field name="short_hash" readonly="1"/>
+                <field name="commit_message_short"/>
+                <field name="author_name"/>
+                <field name="commit_date" widget="datetime"/>
+                <field name="repository_id"/>
+                <field name="branch_name"/>
+                <field name="commit_type" widget="badge"/>
+                <field name="is_mapped" widget="boolean_toggle" readonly="1"/>
+                <field name="mapping_count" widget="integer"/>
+                <field name="files_changed" widget="integer"/>
+                <field name="total_changes" widget="integer"/>
+                <field name="time_since_commit" string="Age"/>
+                <button name="action_create_mapping" string="Map to Timesheet" type="object" 
+                        icon="fa-link" class="btn-link"
+                        attrs="{'invisible': [('is_mapped', '=', True)]}"/>
+                <button name="action_view_mappings" string="View Mappings" type="object" 
+                        icon="fa-eye" class="btn-link"
+                        attrs="{'invisible': [('mapping_count', '=', 0)]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Git Commit Kanban View -->
+    <record id="view_git_commit_kanban" model="ir.ui.view">
+        <field name="name">git.commit.kanban</field>
+        <field name="model">git.commit</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1" quick_create="false" 
+                    default_group_by="commit_type">
+                <field name="id"/>
+                <field name="commit_hash"/>
+                <field name="short_hash"/>
+                <field name="commit_message_short"/>
+                <field name="author_name"/>
+                <field name="commit_date"/>
+                <field name="repository_id"/>
+                <field name="branch_name"/>
+                <field name="commit_type"/>
+                <field name="is_mapped"/>
+                <field name="mapping_count"/>
+                <field name="files_changed"/>
+                <field name="total_changes"/>
+                <field name="commit_url"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click"
+                             t-att-class="record.is_mapped.raw_value ? 'o_kanban_card_mapped' : 'o_kanban_card_unmapped'">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        <strong><t t-esc="record.short_hash.value"/></strong>
+                                        <span class="badge badge-pill ml-1"
+                                              t-att-class="record.is_mapped.raw_value ? 'badge-success' : 'badge-secondary'">
+                                            <t t-if="record.is_mapped.raw_value">Mapped</t>
+                                            <t t-else="">Unmapped</t>
+                                        </span>
+                                    </div>
+                                    <div class="o_secondary">
+                                        <i class="fa fa-code-fork"/> <t t-esc="record.branch_name.value"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_manage_button_section">
+                                    <a class="o_kanban_manage_toggle_button" href="#">
+                                        <i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="o_kanban_card_content">
+                                <div class="o_kanban_card_manage_section o_kanban_manage_view">
+                                    <div class="o_kanban_card_manage_section_header">
+                                        <span class="o_kanban_card_manage_title">Actions</span>
+                                    </div>
+                                    <div>
+                                        <a name="action_create_mapping" type="object"
+                                           t-if="!record.is_mapped.raw_value">
+                                            <i class="fa fa-link"/> Create Mapping
+                                        </a>
+                                        <a name="action_view_mappings" type="object"
+                                           t-if="record.mapping_count.raw_value > 0">
+                                            <i class="fa fa-eye"/> View Mappings
+                                        </a>
+                                        <a name="action_open_commit_url" type="object">
+                                            <i class="fa fa-external-link"/> Open in Git
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_card_lower_content">
+                                    <div class="o_primary">
+                                        <t t-esc="record.commit_message_short.value"/>
+                                    </div>
+                                    <div class="text-muted">
+                                        <i class="fa fa-user"/> <t t-esc="record.author_name.value"/>
+                                        <br/>
+                                        <i class="fa fa-clock-o"/> <t t-esc="record.commit_date.value"/>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_card_lower_content">
+                                    <div class="container o_kanban_card_content o_visible">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <span class="badge badge-info">
+                                                    <i class="fa fa-file-o"/> <t t-esc="record.files_changed.value"/>
+                                                </span>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="badge badge-warning">
+                                                    <i class="fa fa-plus-minus"/> <t t-esc="record.total_changes.value"/>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-1" t-if="record.mapping_count.raw_value > 0">
+                                            <div class="col-12">
+                                                <span class="badge badge-success">
+                                                    <t t-esc="record.mapping_count.value"/> mappings
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Git Commit Search View -->
+    <record id="view_git_commit_search" model="ir.ui.view">
+        <field name="name">git.commit.search</field>
+        <field name="model">git.commit</field>
+        <field name="arch" type="xml">
+            <search string="Git Commits">
+                <field name="commit_hash" string="Commit Hash"/>
+                <field name="commit_message" string="Message" 
+                       filter_domain="[('commit_message', 'ilike', self)]"/>
+                <field name="author_name" string="Author"/>
+                <field name="author_email" string="Author Email"/>
+                <field name="repository_id"/>
+                <field name="branch_name"/>
+                <field name="commit_type"/>
+                
+                <filter string="Mapped" name="filter_mapped" 
+                        domain="[('is_mapped', '=', True)]"/>
+                <filter string="Unmapped" name="filter_unmapped" 
+                        domain="[('is_mapped', '=', False)]"/>
+                <separator/>
+                <filter string="Feature" name="filter_feature" 
+                        domain="[('commit_type', '=', 'feature')]"/>
+                <filter string="Bug Fix" name="filter_bugfix" 
+                        domain="[('commit_type', '=', 'bugfix')]"/>
+                <filter string="Refactor" name="filter_refactor" 
+                        domain="[('commit_type', '=', 'refactor')]"/>
+                <filter string="Documentation" name="filter_docs" 
+                        domain="[('commit_type', '=', 'docs')]"/>
+                <filter string="Test" name="filter_test" 
+                        domain="[('commit_type', '=', 'test')]"/>
+                <filter string="Chore" name="filter_chore" 
+                        domain="[('commit_type', '=', 'chore')]"/>
+                <separator/>
+                <filter string="Today" name="filter_today" 
+                        domain="[('commit_date', '>=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="This Week" name="filter_week" 
+                        domain="[('commit_date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="This Month" name="filter_month" 
+                        domain="[('commit_date', '>=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <separator/>
+                <filter string="Large Changes" name="filter_large_changes" 
+                        domain="[('total_changes', '>', 100)]"/>
+                <filter string="Multiple Files" name="filter_multiple_files" 
+                        domain="[('files_changed', '>', 1)]"/>
+                        
+                <group expand="0" string="Group By">
+                    <filter string="Repository" name="group_repository" 
+                            context="{'group_by': 'repository_id'}"/>
+                    <filter string="Branch" name="group_branch" 
+                            context="{'group_by': 'branch_name'}"/>
+                    <filter string="Author" name="group_author" 
+                            context="{'group_by': 'author_name'}"/>
+                    <filter string="Commit Type" name="group_commit_type" 
+                            context="{'group_by': 'commit_type'}"/>
+                    <filter string="Mapping Status" name="group_mapping_status" 
+                            context="{'group_by': 'is_mapped'}"/>
+                    <filter string="Commit Date" name="group_commit_date" 
+                            context="{'group_by': 'commit_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Git Commit Action -->
+    <record id="action_git_commit" model="ir.actions.act_window">
+        <field name="name">Git Commits</field>
+        <field name="res_model">git.commit</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="view_git_commit_search"/>
+        <field name="context">{
+            'search_default_filter_unmapped': 1,
+            'search_default_filter_week': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No commits found!
+            </p>
+            <p>
+                Commits will appear here after syncing with your Git repositories.
+                Go to Git Repositories to configure and sync your first repository.
+            </p>
+        </field>
+    </record>
+
+    <!-- Unmapped Commits Action -->
+    <record id="action_git_commit_unmapped" model="ir.actions.act_window">
+        <field name="name">Unmapped Commits</field>
+        <field name="res_model">git.commit</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="view_git_commit_search"/>
+        <field name="domain">[('is_mapped', '=', False)]</field>
+        <field name="context">{
+            'search_default_filter_week': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                All commits are mapped!
+            </p>
+            <p>
+                This view shows commits that haven't been mapped to timesheet entries yet.
+                Use the "Create Mapping" button to link commits to your timesheets.
+            </p>
+        </field>
+    </record>
+
+    <!-- Commit Mapping Wizard Action -->
+    <record id="action_commit_mapping_wizard" model="ir.actions.act_window">
+        <field name="name">Create Commit Mapping</field>
+        <field name="res_model">commit.mapping.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_commit_id': active_id,
+        }</field>
+    </record>
+
+</odoo>

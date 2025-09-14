@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_git_repository_admin,git.repository admin,model_git_repository,group_git_repository_admin,1,1,1,1
+access_git_repository_user,git.repository user,model_git_repository,group_git_timesheet_user,1,0,0,0
+access_git_commit_admin,git.commit admin,model_git_commit,group_git_repository_admin,1,1,1,1
+access_git_commit_user,git.commit user,model_git_commit,group_git_timesheet_user,1,1,1,0
+access_timesheet_commit_mapping_admin,timesheet.commit.mapping admin,model_timesheet_commit_mapping,group_git_repository_admin,1,1,1,1
+access_timesheet_commit_mapping_user,timesheet.commit.mapping user,model_timesheet_commit_mapping,group_git_timesheet_user,1,1,1,0
+access_bulk_mapping_wizard_admin,bulk.mapping.wizard admin,model_bulk_mapping_wizard,group_git_repository_admin,1,1,1,1
+access_bulk_mapping_wizard_user,bulk.mapping.wizard user,model_bulk_mapping_wizard,group_git_timesheet_user,1,1,1,1

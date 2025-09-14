@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Git Timesheet Mapper Assets -->
+        
+        <!-- Main Web Assets Bundle -->
+        <record id="git_timesheet_mapper_assets" model="ir.asset">
+            <field name="name">Git Timesheet Mapper Assets</field>
+            <field name="bundle">web.assets_backend</field>
+            <field name="sequence">50</field>
+            <field name="path">git_timesheet_mapper/static/src/css/styles.css</field>
+        </record>
+
+        <!-- JavaScript Components -->
+        <record id="git_timesheet_mapper_js_commit_browser" model="ir.asset">
+            <field name="name">Commit Browser Component</field>
+            <field name="bundle">web.assets_backend</field>
+            <field name="sequence">51</field>
+            <field name="path">git_timesheet_mapper/static/src/js/commit_browser.js</field>
+        </record>
+
+        <record id="git_timesheet_mapper_js_bulk_mapper" model="ir.asset">
+            <field name="name">Bulk Mapper Component</field>
+            <field name="bundle">web.assets_backend</field>
+            <field name="sequence">52</field>
+            <field name="path">git_timesheet_mapper/static/src/js/bulk_mapper.js</field>
+        </record>
+
+        <!-- XML Templates -->
+        <record id="git_timesheet_mapper_xml_templates" model="ir.asset">
+            <field name="name">Git Timesheet Mapper Templates</field>
+            <field name="bundle">web.assets_backend</field>
+            <field name="sequence">53</field>
+            <field name="path">git_timesheet_mapper/static/src/xml/templates.xml</field>
+        </record>
+
+        <!-- Qunit Test Assets (for development) -->
+        <record id="git_timesheet_mapper_test_assets" model="ir.asset">
+            <field name="name">Git Timesheet Mapper Test Assets</field>
+            <field name="bundle">web.qunit_suite_tests</field>
+            <field name="sequence">50</field>
+            <field name="path">git_timesheet_mapper/static/tests/commit_browser_test.js</field>
+        </record>
+
+        <record id="git_timesheet_mapper_test_bulk_mapper" model="ir.asset">
+            <field name="name">Bulk Mapper Test Assets</field>
+            <field name="bundle">web.qunit_suite_tests</field>
+            <field name="sequence">51</field>
+            <field name="path">git_timesheet_mapper/static/tests/bulk_mapper_test.js</field>
+        </record>
+
+        <!-- Public Assets (for website integration if needed) -->
+        <record id="git_timesheet_mapper_public_css" model="ir.asset">
+            <field name="name">Git Timesheet Mapper Public CSS</field>
+            <field name="bundle">web.assets_frontend</field>
+            <field name="sequence">50</field>
+            <field name="path">git_timesheet_mapper/static/src/css/public.css</field>
+        </record>
+
+    </data>
+</odoo>

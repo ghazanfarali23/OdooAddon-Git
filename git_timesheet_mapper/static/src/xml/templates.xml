@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- Git Commit Browser Template -->
+    <t t-name="git_timesheet_mapper.CommitBrowser" owl="1">
+        <div class="git-timesheet-mapper gtm-card">
+            <!-- Header -->
+            <div class="gtm-header">
+                <h2>Git Commit Browser</h2>
+                <div class="subtitle">Browse and manage Git commits for timesheet mapping</div>
+            </div>
+
+            <!-- Repository Selection -->
+            <div class="gtm-card-body" t-if="state.currentView === 'repositories'">
+                <h4>Select Repository</h4>
+                <div class="gtm-filter-row">
+                    <div class="gtm-filter-group">
+                        <label>Repository Type</label>
+                        <select class="gtm-form-control" t-model="state.filters.repositoryType" t-on-change="onFilterChange">
+                            <option value="">All Types</option>
+                            <option value="github">GitHub</option>
+                            <option value="gitlab">GitLab</option>
+                        </select>
+                    </div>
+                    <div class="gtm-filter-group">
+                        <label>Status</label>
+                        <select class="gtm-form-control" t-model="state.filters.connectionStatus" t-on-change="onFilterChange">
+                            <option value="">All Status</option>
+                            <option value="connected">Connected</option>
+                            <option value="disconnected">Disconnected</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="gtm-loading" t-if="state.loading">
+                    <div class="gtm-spinner"></div>
+                    Loading repositories...
+                </div>
+
+                <div class="gtm-empty" t-elif="!state.repositories.length">
+                    <div class="gtm-empty-icon">📁</div>
+                    <h4>No Repositories Found</h4>
+                    <p>Add a repository configuration to get started.</p>
+                    <button class="gtm-btn gtm-btn-primary" t-on-click="onAddRepository">
+                        Add Repository
+                    </button>
+                </div>
+
+                <div t-else="">
+                    <div t-foreach="state.repositories" t-as="repo" t-key="repo.id" 
+                         class="gtm-commit-item gtm-fade-in" 
+                         t-on-click="() => this.selectRepository(repo.id)">
+                        <div class="gtm-connection-status">
+                            <div t-attf-class="gtm-connection-indicator #{repo.connection_status === 'connected' ? '' : 'disconnected'}"></div>
+                            <span t-esc="repo.repository_type.toUpperCase()"/>
+                        </div>
+                        <div class="gtm-commit-message">
+                            <strong t-esc="repo.name"/>
+                            <div class="gtm-commit-meta">
+                                <small t-esc="repo.url"/>
+                            </div>
+                        </div>
+                        <div class="gtm-badge gtm-badge-light">
+                            <t t-esc="repo.total_commits || 0"/> commits
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branch Selection -->
+            <div class="gtm-card-body" t-if="state.currentView === 'branches'">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Select Branch</h4>
+                    <button class="gtm-btn gtm-btn-outline-primary" t-on-click="() => this.setState({currentView: 'repositories'})">
+                        ← Back to Repositories
+                    </button>
+                </div>
+
+                <div class="gtm-search">
+                    <input type="text" class="gtm-form-control gtm-search-input" 
+                           placeholder="Search branches..." 
+                           t-model="state.branchSearch"
+                           t-on-input="onBranchSearch"/>
+                    <i class="fa fa-search gtm-search-icon"></i>
+                </div>
+
+                <div class="gtm-loading" t-if="state.loading">
+                    <div class="gtm-spinner"></div>
+                    Loading branches...
+                </div>
+
+                <div class="gtm-empty" t-elif="!state.branches.length">
+                    <div class="gtm-empty-icon">🌿</div>
+                    <h4>No Branches Found</h4>
+                    <p>No branches found for this repository.</p>
+                </div>
+
+                <div t-else="">
+                    <div t-foreach="state.filteredBranches" t-as="branch" t-key="branch.name" 
+                         class="gtm-commit-item gtm-fade-in"
+                         t-on-click="() => this.selectBranch(branch.name)">
+                        <div class="gtm-commit-hash">
+                            <i class="fa fa-code-branch"></i>
+                        </div>
+                        <div class="gtm-commit-message">
+                            <strong t-esc="branch.name"/>
+                            <div class="gtm-commit-meta">
+                                <small>Last commit: <t t-esc="formatDate(branch.last_commit_date)"/></small>
+                            </div>
+                        </div>
+                        <div class="gtm-badge gtm-badge-light">
+                            <t t-esc="branch.commit_count"/> commits
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commit List -->
+            <div class="gtm-card-body" t-if="state.currentView === 'commits'">
+                <!-- Filters -->
+                <div class="gtm-filters">
+                    <div class="gtm-filter-row">
+                        <div class="gtm-filter-group">
+                            <label>Repository</label>
+                            <select class="gtm-form-control" t-model="state.filters.repository" t-on-change="loadCommits">
+                                <option t-foreach="state.repositories" t-as="repo" t-key="repo.id" 
+                                        t-att-value="repo.id" t-esc="repo.name"/>
+                            </select>
+                        </div>
+                        <div class="gtm-filter-group">
+                            <label>Branch</label>
+                            <select class="gtm-form-control" t-model="state.filters.branch" t-on-change="loadCommits">
+                                <option value="">All Branches</option>
+                                <option t-foreach="state.branches" t-as="branch" t-key="branch.name" 
+                                        t-att-value="branch.name" t-esc="branch.name"/>
+                            </select>
+                        </div>
+                        <div class="gtm-filter-group">
+                            <label>Author</label>
+                            <input type="text" class="gtm-form-control" 
+                                   placeholder="Filter by author..." 
+                                   t-model="state.filters.author"
+                                   t-on-input="debounceLoadCommits"/>
+                        </div>
+                    </div>
+                    <div class="gtm-filter-row">
+                        <div class="gtm-filter-group">
+                            <label>Date From</label>
+                            <input type="date" class="gtm-form-control" 
+                                   t-model="state.filters.dateFrom"
+                                   t-on-change="loadCommits"/>
+                        </div>
+                        <div class="gtm-filter-group">
+                            <label>Date To</label>
+                            <input type="date" class="gtm-form-control" 
+                                   t-model="state.filters.dateTo"
+                                   t-on-change="loadCommits"/>
+                        </div>
+                        <div class="gtm-filter-group">
+                            <label>Commit Type</label>
+                            <select class="gtm-form-control" t-model="state.filters.commitType" t-on-change="loadCommits">
+                                <option value="">All Types</option>
+                                <option value="feature">Feature</option>
+                                <option value="bugfix">Bug Fix</option>
+                                <option value="refactor">Refactor</option>
+                                <option value="docs">Documentation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="gtm-filter-row">
+                        <div class="gtm-filter-group">
+                            <label>
+                                <input type="checkbox" t-model="state.filters.onlyUnmapped" t-on-change="loadCommits"/>
+                                Only show unmapped commits
+                            </label>
+                        </div>
+                        <div class="gtm-filter-group">
+                            <button class="gtm-btn gtm-btn-outline-primary" t-on-click="resetFilters">
+                                Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="gtm-search">
+                    <input type="text" class="gtm-form-control gtm-search-input" 
+                           placeholder="Search commits..." 
+                           t-model="state.searchQuery"
+                           t-on-input="onSearch"/>
+                    <i class="fa fa-search gtm-search-icon"></i>
+                    <button t-if="state.searchQuery" 
+                            class="gtm-search-clear" 
+                            t-on-click="clearSearch">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="d-flex justify-content-between align-items-center mb-3" t-if="state.selectedCommits.size > 0">
+                    <div>
+                        <span class="gtm-badge gtm-badge-info">
+                            <t t-esc="state.selectedCommits.size"/> selected
+                        </span>
+                        <button class="gtm-btn gtm-btn-sm gtm-btn-primary ms-2" t-on-click="openBulkMapping">
+                            <i class="fa fa-link"></i> Bulk Map
+                        </button>
+                        <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary ms-1" t-on-click="clearSelection">
+                            Clear Selection
+                        </button>
+                    </div>
+                    <div>
+                        <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary" t-on-click="selectAllVisible">
+                            Select All Visible
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="gtm-loading" t-if="state.loading">
+                    <div class="gtm-spinner"></div>
+                    Loading commits...
+                </div>
+
+                <!-- Empty State -->
+                <div class="gtm-empty" t-elif="!state.commits.length">
+                    <div class="gtm-empty-icon">📝</div>
+                    <h4>No Commits Found</h4>
+                    <p>No commits match your current filters.</p>
+                    <button class="gtm-btn gtm-btn-primary" t-on-click="syncCommits">
+                        <i class="fa fa-sync"></i> Sync Commits
+                    </button>
+                </div>
+
+                <!-- Commit List -->
+                <div t-else="">
+                    <div t-foreach="state.paginatedCommits" t-as="commit" t-key="commit.id" 
+                         t-attf-class="gtm-commit-item gtm-fade-in #{state.selectedCommits.has(commit.id) ? 'selected' : ''} #{commit.is_mapped ? 'mapped' : ''}"
+                         t-on-click="() => this.toggleCommitSelection(commit.id)"
+                         draggable="true"
+                         t-on-dragstart="(ev) => this.onCommitDragStart(ev, commit.id)">
+                        
+                        <div class="gtm-commit-hash" t-esc="commit.short_hash"/>
+                        
+                        <div class="gtm-commit-message">
+                            <span t-esc="commit.commit_message_short"/>
+                            <div class="gtm-commit-meta">
+                                <div class="gtm-commit-author" t-esc="commit.author_name"/>
+                                <div class="gtm-commit-date" t-esc="formatDate(commit.commit_date)"/>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                            <div t-if="commit.commit_type" 
+                                 t-attf-class="gtm-badge gtm-badge-#{getCommitTypeBadgeClass(commit.commit_type)}"
+                                 t-esc="commit.commit_type"/>
+                            
+                            <div t-if="commit.is_mapped" class="gtm-badge gtm-badge-success">
+                                <i class="fa fa-check"></i> Mapped
+                            </div>
+                            
+                            <div class="gtm-commit-actions">
+                                <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary" 
+                                        t-on-click.stop="() => this.viewCommitDetails(commit.id)">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button t-if="!commit.is_mapped" 
+                                        class="gtm-btn gtm-btn-sm gtm-btn-primary" 
+                                        t-on-click.stop="() => this.quickMapCommit(commit.id)">
+                                    <i class="fa fa-link"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="gtm-pagination" t-if="state.totalPages > 1">
+                    <button class="gtm-btn gtm-btn-outline-primary" 
+                            t-att-disabled="state.currentPage === 1"
+                            t-on-click="() => this.goToPage(state.currentPage - 1)">
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                    
+                    <div class="gtm-pagination-info">
+                        Page <t t-esc="state.currentPage"/> of <t t-esc="state.totalPages"/>
+                        (<t t-esc="state.totalCommits"/> total)
+                    </div>
+                    
+                    <button class="gtm-btn gtm-btn-outline-primary" 
+                            t-att-disabled="state.currentPage === state.totalPages"
+                            t-on-click="() => this.goToPage(state.currentPage + 1)">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="gtm-card-footer" t-if="state.currentView === 'commits'">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button class="gtm-btn gtm-btn-outline-primary" t-on-click="refreshData">
+                            <i class="fa fa-refresh"></i> Refresh
+                        </button>
+                        <button class="gtm-btn gtm-btn-outline-primary ms-2" t-on-click="syncCommits">
+                            <i class="fa fa-sync"></i> Sync
+                        </button>
+                    </div>
+                    <div>
+                        <button class="gtm-btn gtm-btn-primary" t-on-click="openBulkMapping">
+                            <i class="fa fa-link"></i> Bulk Map Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Bulk Mapper Template -->
+    <t t-name="git_timesheet_mapper.BulkMapper" owl="1">
+        <div class="git-timesheet-mapper gtm-wizard">
+            <!-- Header -->
+            <div class="gtm-wizard-header">
+                <h2>Bulk Mapping Wizard</h2>
+                <div class="gtm-wizard-steps">
+                    <div t-foreach="[1,2,3,4]" t-as="step" t-key="step"
+                         t-attf-class="gtm-wizard-step #{state.currentStep === step ? 'active' : ''} #{state.currentStep > step ? 'completed' : ''}">
+                        <div class="gtm-wizard-step-number">
+                            <i t-if="state.currentStep > step" class="fa fa-check"></i>
+                            <span t-else="" t-esc="step"/>
+                        </div>
+                        <span t-esc="getStepLabel(step)"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step Content -->
+            <div class="gtm-wizard-body">
+                <!-- Step 1: Commit Selection -->
+                <div t-if="state.currentStep === 1" class="gtm-fade-in">
+                    <h3>Select Commits</h3>
+                    <p>Choose the commits you want to map to timesheet entries.</p>
+
+                    <!-- Filters -->
+                    <div class="gtm-filters">
+                        <div class="gtm-filter-row">
+                            <div class="gtm-filter-group">
+                                <label>Repository</label>
+                                <select class="gtm-form-control" t-model="state.commitFilters.repository" t-on-change="loadCommits">
+                                    <option value="">Select Repository</option>
+                                    <option t-foreach="state.repositories" t-as="repo" t-key="repo.id" 
+                                            t-att-value="repo.id" t-esc="repo.name"/>
+                                </select>
+                            </div>
+                            <div class="gtm-filter-group">
+                                <label>Branch</label>
+                                <select class="gtm-form-control" t-model="state.commitFilters.branch" t-on-change="loadCommits">
+                                    <option value="">All Branches</option>
+                                    <option t-foreach="state.branches" t-as="branch" t-key="branch.name" 
+                                            t-att-value="branch.name" t-esc="branch.name"/>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="gtm-filter-row">
+                            <div class="gtm-filter-group">
+                                <label>Date From</label>
+                                <input type="date" class="gtm-form-control" 
+                                       t-model="state.commitFilters.dateFrom"
+                                       t-on-change="loadCommits"/>
+                            </div>
+                            <div class="gtm-filter-group">
+                                <label>Date To</label>
+                                <input type="date" class="gtm-form-control" 
+                                       t-model="state.commitFilters.dateTo"
+                                       t-on-change="loadCommits"/>
+                            </div>
+                            <div class="gtm-filter-group">
+                                <label>
+                                    <input type="checkbox" t-model="state.commitFilters.onlyUnmapped" t-on-change="loadCommits"/>
+                                    Only unmapped commits
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary" t-on-click="selectAllCommits">
+                                Select All
+                            </button>
+                            <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary ms-2" t-on-click="deselectAllCommits">
+                                Deselect All
+                            </button>
+                        </div>
+                        <div class="gtm-badge gtm-badge-info" t-if="state.selectedCommits.size > 0">
+                            <t t-esc="state.selectedCommits.size"/> selected
+                        </div>
+                    </div>
+
+                    <!-- Commit List -->
+                    <div class="gtm-loading" t-if="state.loading">
+                        <div class="gtm-spinner"></div>
+                        Loading commits...
+                    </div>
+
+                    <div t-elif="!state.commits.length" class="gtm-empty">
+                        <div class="gtm-empty-icon">📝</div>
+                        <h4>No Commits Found</h4>
+                        <p>Please select a repository and branch to load commits.</p>
+                    </div>
+
+                    <div t-else="" style="max-height: 400px; overflow-y: auto;">
+                        <div t-foreach="state.commits" t-as="commit" t-key="commit.id" 
+                             t-attf-class="gtm-commit-item #{state.selectedCommits.has(commit.id) ? 'selected' : ''} #{commit.is_mapped ? 'mapped' : ''}"
+                             t-on-click="() => this.toggleCommitSelection(commit.id)"
+                             draggable="true"
+                             t-on-dragstart="(ev) => this.onCommitDragStart(ev, commit.id)"
+                             t-on-dragend="onDragEnd">
+                            
+                            <div class="gtm-commit-hash" t-esc="commit.short_hash"/>
+                            <div class="gtm-commit-message" t-esc="commit.commit_message_short"/>
+                            <div class="gtm-commit-meta">
+                                <div class="gtm-commit-author" t-esc="commit.author_name"/>
+                                <div class="gtm-commit-date" t-esc="formatDate(commit.commit_date)"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Timesheet Selection -->
+                <div t-if="state.currentStep === 2" class="gtm-fade-in">
+                    <h3>Select Timesheet Entries</h3>
+                    <p>Choose the timesheet entries to map the selected commits to.</p>
+
+                    <!-- Filters -->
+                    <div class="gtm-filters">
+                        <div class="gtm-filter-row">
+                            <div class="gtm-filter-group">
+                                <label>Project</label>
+                                <select class="gtm-form-control" t-model="state.timesheetFilters.project" t-on-change="loadTimesheets">
+                                    <option value="">All Projects</option>
+                                    <option t-foreach="state.projects" t-as="project" t-key="project.id" 
+                                            t-att-value="project.id" t-esc="project.name"/>
+                                </select>
+                            </div>
+                            <div class="gtm-filter-group">
+                                <label>Employee</label>
+                                <select class="gtm-form-control" t-model="state.timesheetFilters.employee" t-on-change="loadTimesheets">
+                                    <option value="">All Employees</option>
+                                    <option t-foreach="state.employees" t-as="employee" t-key="employee.id" 
+                                            t-att-value="employee.id" t-esc="employee.name"/>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="gtm-filter-row">
+                            <div class="gtm-filter-group">
+                                <label>Date From</label>
+                                <input type="date" class="gtm-form-control" 
+                                       t-model="state.timesheetFilters.dateFrom"
+                                       t-on-change="loadTimesheets"/>
+                            </div>
+                            <div class="gtm-filter-group">
+                                <label>Date To</label>
+                                <input type="date" class="gtm-form-control" 
+                                       t-model="state.timesheetFilters.dateTo"
+                                       t-on-change="loadTimesheets"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary" t-on-click="selectAllTimesheets">
+                                Select All
+                            </button>
+                            <button class="gtm-btn gtm-btn-sm gtm-btn-outline-primary ms-2" t-on-click="deselectAllTimesheets">
+                                Deselect All
+                            </button>
+                        </div>
+                        <div class="gtm-badge gtm-badge-success" t-if="state.selectedTimesheets.size > 0">
+                            <t t-esc="state.selectedTimesheets.size"/> selected
+                        </div>
+                    </div>
+
+                    <!-- Timesheet List -->
+                    <div class="gtm-loading" t-if="state.loading">
+                        <div class="gtm-spinner"></div>
+                        Loading timesheets...
+                    </div>
+
+                    <div t-elif="!state.timesheets.length" class="gtm-empty">
+                        <div class="gtm-empty-icon">⏰</div>
+                        <h4>No Timesheet Entries Found</h4>
+                        <p>No timesheet entries match your current filters.</p>
+                    </div>
+
+                    <div t-else="" style="max-height: 400px; overflow-y: auto;">
+                        <div t-foreach="state.timesheets" t-as="timesheet" t-key="timesheet.id" 
+                             t-attf-class="gtm-timesheet-item #{state.selectedTimesheets.has(timesheet.id) ? 'selected' : ''} #{state.dropTarget === timesheet.id ? 'drop-target' : ''}"
+                             t-on-click="() => this.toggleTimesheetSelection(timesheet.id)"
+                             t-on-dragover="(ev) => this.onTimesheetDragOver(ev, timesheet.id)"
+                             t-on-drop="(ev) => this.onTimesheetDrop(ev, timesheet.id)">
+                            
+                            <div class="gtm-timesheet-info">
+                                <div class="gtm-timesheet-name" t-esc="timesheet.name"/>
+                                <div class="gtm-timesheet-details">
+                                    <span>Project: <t t-esc="timesheet.project_id[1]"/></span>
+                                    <span t-if="timesheet.task_id">Task: <t t-esc="timesheet.task_id[1]"/></span>
+                                    <span>Date: <t t-esc="formatDate(timesheet.date)"/></span>
+                                </div>
+                            </div>
+                            <div class="gtm-timesheet-hours">
+                                <t t-esc="timesheet.unit_amount"/>h
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Mapping Preview -->
+                <div t-if="state.currentStep === 3" class="gtm-fade-in">
+                    <h3>Preview Mappings</h3>
+                    <p>Review and configure the proposed mappings before processing.</p>
+
+                    <!-- Mapping Configuration -->
+                    <div class="gtm-filters">
+                        <div class="gtm-filter-row">
+                            <div class="gtm-filter-group">
+                                <label>Mapping Strategy</label>
+                                <select class="gtm-form-control" t-model="state.mappingStrategy" t-on-change="generateMappingSuggestions">
+                                    <option value="intelligent">Intelligent Matching</option>
+                                    <option value="sequential">Sequential Mapping</option>
+                                    <option value="manual">Manual Mapping</option>
+                                </select>
+                            </div>
+                            <div class="gtm-filter-group">
+                                <label>Description</label>
+                                <input type="text" class="gtm-form-control" 
+                                       placeholder="Bulk mapping description..." 
+                                       t-model="state.mappingDescription"/>
+                            </div>
+                        </div>
+                        <div class="gtm-filter-row">
+                            <div class="gtm-filter-group">
+                                <label>
+                                    <input type="checkbox" t-model="state.autoVerify"/>
+                                    Auto-verify mappings
+                                </label>
+                            </div>
+                            <div class="gtm-filter-group" t-if="state.mappingStrategy === 'intelligent'">
+                                <label>Confidence Threshold: <t t-esc="state.confidenceThreshold"/>%</label>
+                                <input type="range" class="gtm-form-control" 
+                                       min="50" max="95" step="5"
+                                       t-model="state.confidenceThreshold"
+                                       t-on-change="generateMappingSuggestions"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mapping Preview -->
+                    <div class="gtm-loading" t-if="state.loading">
+                        <div class="gtm-spinner"></div>
+                        Generating mapping suggestions...
+                    </div>
+
+                    <div t-elif="!state.previewMappings.length" class="gtm-empty">
+                        <div class="gtm-empty-icon">🔗</div>
+                        <h4>No Mappings Generated</h4>
+                        <p>Try adjusting the mapping strategy or confidence threshold.</p>
+                    </div>
+
+                    <div t-else="">
+                        <div class="gtm-stats">
+                            <div class="gtm-stat">
+                                <span class="gtm-stat-value" t-esc="state.previewMappings.length"/>
+                                <span class="gtm-stat-label">Mappings</span>
+                            </div>
+                            <div class="gtm-stat" t-if="state.mappingStrategy === 'intelligent'">
+                                <span class="gtm-stat-value" t-esc="getAverageConfidence()"/>%
+                                <span class="gtm-stat-label">Avg. Confidence</span>
+                            </div>
+                        </div>
+
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table class="gtm-table gtm-table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Commit</th>
+                                        <th>Timesheet</th>
+                                        <th t-if="state.mappingStrategy === 'intelligent'">Confidence</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.previewMappings" t-as="mapping" t-key="mapping_index">
+                                        <td>
+                                            <div class="gtm-commit-hash" t-esc="getCommit(mapping.commit_id).short_hash"/>
+                                            <small t-esc="getCommit(mapping.commit_id).commit_message_short"/>
+                                        </td>
+                                        <td>
+                                            <strong t-esc="getTimesheet(mapping.timesheet_id).name"/>
+                                            <br/>
+                                            <small t-esc="getTimesheet(mapping.timesheet_id).project_id[1]"/>
+                                        </td>
+                                        <td t-if="state.mappingStrategy === 'intelligent'">
+                                            <span t-attf-class="gtm-badge #{getConfidenceClass(mapping.confidence_score)}">
+                                                <t t-esc="mapping.confidence_score"/>%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="gtm-btn gtm-btn-sm gtm-btn-danger" 
+                                                    t-on-click="() => this.removeMappingPreview(mapping_index)">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Processing Results -->
+                <div t-if="state.currentStep === 4" class="gtm-fade-in">
+                    <h3 t-if="state.isProcessing">Processing Mappings</h3>
+                    <h3 t-else="">Mapping Results</h3>
+
+                    <!-- Progress -->
+                    <div t-if="state.isProcessing">
+                        <div class="gtm-progress-text" t-esc="state.processingStatus"/>
+                        <div class="gtm-progress">
+                            <div class="gtm-progress-bar" 
+                                 t-attf-style="width: #{getProgressPercentage()}%"></div>
+                        </div>
+                        <div class="text-center">
+                            <t t-esc="state.processedCount"/> / <t t-esc="state.totalToProcess"/> completed
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div t-else="">
+                        <div class="gtm-stats">
+                            <div class="gtm-stat">
+                                <span class="gtm-stat-value gtm-text-success" t-esc="state.createdMappings"/>
+                                <span class="gtm-stat-label">Created</span>
+                            </div>
+                            <div class="gtm-stat">
+                                <span class="gtm-stat-value gtm-text-danger" t-esc="state.failedMappings"/>
+                                <span class="gtm-stat-label">Failed</span>
+                            </div>
+                            <div class="gtm-stat">
+                                <span class="gtm-stat-value" t-esc="formatDuration(state.completionTime)"/>
+                                <span class="gtm-stat-label">Duration</span>
+                            </div>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div class="gtm-alert gtm-alert-success" t-if="state.createdMappings > 0">
+                            <strong>Success!</strong> Created <t t-esc="state.createdMappings"/> mappings successfully.
+                        </div>
+
+                        <!-- Errors -->
+                        <div class="gtm-alert gtm-alert-danger" t-if="state.errors.length > 0">
+                            <strong>Errors encountered:</strong>
+                            <ul class="mt-2 mb-0">
+                                <li t-foreach="state.errors" t-as="error" t-key="error_index" t-esc="error"/>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="gtm-wizard-footer">
+                <div>
+                    <button t-if="state.currentStep > 1 and !state.isProcessing" 
+                            class="gtm-btn gtm-btn-outline-primary" 
+                            t-on-click="prevStep">
+                        ← Previous
+                    </button>
+                </div>
+                <div>
+                    <button t-if="state.currentStep < 4 and state.canProceed and !state.isProcessing" 
+                            class="gtm-btn gtm-btn-primary" 
+                            t-on-click="nextStep">
+                        <span t-if="state.currentStep === 3">Process Mappings</span>
+                        <span t-else="">Next →</span>
+                    </button>
+                    <button t-elif="state.currentStep === 4 and !state.isProcessing" 
+                            class="gtm-btn gtm-btn-success" 
+                            t-on-click="finish">
+                        Finish
+                    </button>
+                    <button class="gtm-btn gtm-btn-outline-primary ms-2" 
+                            t-on-click="cancel"
+                            t-att-disabled="state.isProcessing">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Helper Templates -->
+    <t t-name="git_timesheet_mapper.LoadingSpinner" owl="1">
+        <div class="gtm-loading">
+            <div class="gtm-spinner"></div>
+            <span t-if="props.message" t-esc="props.message"/>
+            <span t-else="">Loading...</span>
+        </div>
+    </t>
+
+    <t t-name="git_timesheet_mapper.EmptyState" owl="1">
+        <div class="gtm-empty">
+            <div class="gtm-empty-icon" t-esc="props.icon or '📄'"/>
+            <h4 t-esc="props.title or 'No Data'"/>
+            <p t-if="props.message" t-esc="props.message"/>
+            <button t-if="props.actionText and props.onAction" 
+                    class="gtm-btn gtm-btn-primary" 
+                    t-on-click="props.onAction"
+                    t-esc="props.actionText"/>
+        </div>
+    </t>
+
+    <t t-name="git_timesheet_mapper.ConfirmDialog" owl="1">
+        <div class="modal fade show" style="display: block;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" t-esc="props.title or 'Confirm'"/>
+                    </div>
+                    <div class="modal-body">
+                        <p t-esc="props.message"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="gtm-btn gtm-btn-outline-primary" 
+                                t-on-click="props.onCancel or close">
+                            Cancel
+                        </button>
+                        <button t-attf-class="gtm-btn gtm-btn-#{props.type or 'primary'}" 
+                                t-on-click="props.onConfirm">
+                            <t t-esc="props.confirmText or 'Confirm'"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

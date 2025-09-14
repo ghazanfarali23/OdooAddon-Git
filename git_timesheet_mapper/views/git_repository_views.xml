@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Git Repository Form View -->
+    <record id="view_git_repository_form" model="ir.ui.view">
+        <field name="name">git.repository.form</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <form string="Git Repository">
+                <header>
+                    <button name="action_test_connection" string="Test Connection" type="object" 
+                            class="btn-primary" icon="fa-plug"
+                            attrs="{'invisible': [('connection_status', '=', 'testing')]}"/>
+                    <button name="action_sync_commits" string="Sync Commits" type="object" 
+                            class="btn-secondary" icon="fa-refresh"
+                            attrs="{'invisible': [('connection_status', '!=', 'connected')]}"/>
+                    <button name="action_view_commits" string="View Commits" type="object" 
+                            class="btn-info" icon="fa-code-fork"
+                            attrs="{'invisible': [('commit_count', '=', 0)]}"/>
+                    <field name="connection_status" widget="statusbar" 
+                           statusbar_visible="disconnected,testing,connected,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_commits" type="object" class="oe_stat_button" icon="fa-code-fork">
+                            <field name="commit_count" widget="statinfo" string="Commits"/>
+                        </button>
+                        <button name="action_view_mappings" type="object" class="oe_stat_button" icon="fa-link">
+                            <field name="mapping_count" widget="statinfo" string="Mappings"/>
+                        </button>
+                        <button name="action_view_branches" type="object" class="oe_stat_button" icon="fa-code-fork">
+                            <field name="branch_count" widget="statinfo" string="Branches"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="Repository Display Name"/></h1>
+                        <h3>
+                            <field name="repository_url" widget="url" placeholder="https://github.com/user/repo"/>
+                        </h3>
+                    </div>
+                    
+                    <group>
+                        <group name="repository_info">
+                            <field name="repository_type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="owner" readonly="1"/>
+                            <field name="repo_name" readonly="1"/>
+                            <field name="is_private"/>
+                            <field name="default_branch"/>
+                        </group>
+                        <group name="project_info">
+                            <field name="project_id" options="{'no_create': True}"/>
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Authentication" name="auth_group" 
+                           attrs="{'invisible': [('is_private', '=', False)]}">
+                        <field name="access_token" password="True" 
+                               placeholder="Personal Access Token for private repositories"/>
+                        <div class="text-muted">
+                            <p>For private repositories, provide a personal access token with repository read permissions.</p>
+                            <p><strong>GitHub:</strong> Settings → Developer settings → Personal access tokens</p>
+                            <p><strong>GitLab:</strong> User Settings → Access Tokens</p>
+                        </div>
+                    </group>
+                    
+                    <group string="Connection Status" name="status_group">
+                        <field name="last_sync_date" readonly="1"/>
+                        <field name="last_error_message" readonly="1" 
+                               attrs="{'invisible': [('last_error_message', '=', False)]}"/>
+                        <field name="sync_frequency" 
+                               attrs="{'invisible': [('connection_status', '!=', 'connected')]}"/>
+                    </group>
+                    
+                    <group string="Statistics" name="stats_group" col="4">
+                        <field name="total_commits" readonly="1"/>
+                        <field name="mapped_commits" readonly="1"/>
+                        <field name="unmapped_commits" readonly="1"/>
+                        <field name="last_commit_date" readonly="1"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Repository Details" name="details">
+                            <group>
+                                <field name="description" nolabel="1" placeholder="Repository description..."/>
+                            </group>
+                            <group string="Repository Information" col="2">
+                                <field name="language" readonly="1"/>
+                                <field name="size" readonly="1"/>
+                                <field name="open_issues_count" readonly="1"/>
+                                <field name="forks_count" readonly="1"/>
+                                <field name="stars_count" readonly="1"/>
+                                <field name="watchers_count" readonly="1"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Recent Commits" name="recent_commits" 
+                              attrs="{'invisible': [('commit_count', '=', 0)]}">
+                            <field name="commit_ids" readonly="1" nolabel="1">
+                                <tree string="Recent Commits" limit="10" create="false" edit="false">
+                                    <field name="commit_hash"/>
+                                    <field name="short_hash"/>
+                                    <field name="author_name"/>
+                                    <field name="commit_message_short"/>
+                                    <field name="commit_date"/>
+                                    <field name="branch_name"/>
+                                    <field name="is_mapped" widget="boolean_toggle"/>
+                                    <field name="mapping_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <page string="Sync History" name="sync_history">
+                            <field name="sync_log_ids" readonly="1" nolabel="1">
+                                <tree string="Sync History" create="false" edit="false">
+                                    <field name="sync_date"/>
+                                    <field name="sync_type"/>
+                                    <field name="commits_fetched"/>
+                                    <field name="status"/>
+                                    <field name="error_message"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Git Repository Tree View -->
+    <record id="view_git_repository_tree" model="ir.ui.view">
+        <field name="name">git.repository.tree</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <tree string="Git Repositories" multi_edit="1">
+                <field name="name"/>
+                <field name="repository_type" widget="badge"/>
+                <field name="owner"/>
+                <field name="repo_name"/>
+                <field name="project_id"/>
+                <field name="connection_status" widget="badge" 
+                       decoration-success="connection_status == 'connected'"
+                       decoration-danger="connection_status == 'error'"
+                       decoration-warning="connection_status == 'testing'"
+                       decoration-muted="connection_status == 'disconnected'"/>
+                <field name="commit_count" widget="integer"/>
+                <field name="mapped_commits" widget="integer"/>
+                <field name="unmapped_commits" widget="integer"/>
+                <field name="last_sync_date" widget="datetime"/>
+                <field name="is_private" widget="boolean_toggle"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <button name="action_test_connection" string="Test Connection" type="object" 
+                        icon="fa-plug" class="btn-link"
+                        attrs="{'invisible': [('connection_status', '=', 'testing')]}"/>
+                <button name="action_sync_commits" string="Sync" type="object" 
+                        icon="fa-refresh" class="btn-link"
+                        attrs="{'invisible': [('connection_status', '!=', 'connected')]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Git Repository Kanban View -->
+    <record id="view_git_repository_kanban" model="ir.ui.view">
+        <field name="name">git.repository.kanban</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="repository_type"/>
+                <field name="connection_status"/>
+                <field name="commit_count"/>
+                <field name="mapped_commits"/>
+                <field name="unmapped_commits"/>
+                <field name="last_sync_date"/>
+                <field name="project_id"/>
+                <field name="repository_url"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary">
+                                        <field name="name"/>
+                                    </div>
+                                    <div class="o_secondary">
+                                        <i class="fa fa-github" t-if="repository_type == 'github'"/>
+                                        <i class="fa fa-gitlab" t-if="repository_type == 'gitlab'"/>
+                                        <t t-esc="record.repository_type.value"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_manage_button_section">
+                                    <a class="o_kanban_manage_toggle_button" href="#">
+                                        <i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="o_kanban_card_content">
+                                <div class="o_kanban_card_manage_section o_kanban_manage_view">
+                                    <div class="o_kanban_card_manage_section_header">
+                                        <span class="o_kanban_card_manage_title">Actions</span>
+                                    </div>
+                                    <div>
+                                        <a name="action_test_connection" type="object" 
+                                           t-if="record.connection_status.raw_value != 'testing'">
+                                            <i class="fa fa-plug"/> Test Connection
+                                        </a>
+                                        <a name="action_sync_commits" type="object"
+                                           t-if="record.connection_status.raw_value == 'connected'">
+                                            <i class="fa fa-refresh"/> Sync Commits
+                                        </a>
+                                        <a name="action_view_commits" type="object"
+                                           t-if="record.commit_count.raw_value > 0">
+                                            <i class="fa fa-code-fork"/> View Commits
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_card_lower_content">
+                                    <div class="o_kanban_primary_left">
+                                        <div class="o_primary">
+                                            <span class="badge badge-pill" 
+                                                  t-att-class="record.connection_status.raw_value == 'connected' ? 'badge-success' : 
+                                                              record.connection_status.raw_value == 'error' ? 'badge-danger' : 
+                                                              record.connection_status.raw_value == 'testing' ? 'badge-warning' : 'badge-secondary'">
+                                                <t t-esc="record.connection_status.value"/>
+                                            </span>
+                                        </div>
+                                        <div class="text-muted">
+                                            <t t-if="record.project_id.value">
+                                                <i class="fa fa-folder-o"/> <t t-esc="record.project_id.value"/>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_card_lower_content">
+                                    <div class="container o_kanban_card_content o_visible">
+                                        <div class="row">
+                                            <div class="col-6 o_kanban_primary_left">
+                                                <button class="btn btn-primary btn-sm" type="object" 
+                                                        name="action_view_commits">
+                                                    <span t-esc="record.commit_count.value"/> Commits
+                                                </button>
+                                            </div>
+                                            <div class="col-6 o_kanban_primary_right">
+                                                <span class="badge badge-secondary">
+                                                    <t t-esc="record.mapped_commits.value"/> mapped
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-1" t-if="record.last_sync_date.value">
+                                            <div class="col-12 text-muted small">
+                                                Last sync: <t t-esc="record.last_sync_date.value"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Git Repository Search View -->
+    <record id="view_git_repository_search" model="ir.ui.view">
+        <field name="name">git.repository.search</field>
+        <field name="model">git.repository</field>
+        <field name="arch" type="xml">
+            <search string="Git Repositories">
+                <field name="name" string="Repository" 
+                       filter_domain="['|', ('name', 'ilike', self), ('repository_url', 'ilike', self)]"/>
+                <field name="owner"/>
+                <field name="repo_name"/>
+                <field name="project_id"/>
+                <field name="repository_type"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                
+                <filter string="Connected" name="filter_connected" 
+                        domain="[('connection_status', '=', 'connected')]"/>
+                <filter string="Disconnected" name="filter_disconnected" 
+                        domain="[('connection_status', '=', 'disconnected')]"/>
+                <filter string="Error" name="filter_error" 
+                        domain="[('connection_status', '=', 'error')]"/>
+                <separator/>
+                <filter string="Private" name="filter_private" 
+                        domain="[('is_private', '=', True)]"/>
+                <filter string="Public" name="filter_public" 
+                        domain="[('is_private', '=', False)]"/>
+                <separator/>
+                <filter string="GitHub" name="filter_github" 
+                        domain="[('repository_type', '=', 'github')]"/>
+                <filter string="GitLab" name="filter_gitlab" 
+                        domain="[('repository_type', '=', 'gitlab')]"/>
+                <separator/>
+                <filter string="Has Commits" name="filter_has_commits" 
+                        domain="[('commit_count', '>', 0)]"/>
+                <filter string="No Commits" name="filter_no_commits" 
+                        domain="[('commit_count', '=', 0)]"/>
+                <filter string="Has Mappings" name="filter_has_mappings" 
+                        domain="[('mapping_count', '>', 0)]"/>
+                <separator/>
+                <filter string="Synced Today" name="filter_synced_today" 
+                        domain="[('last_sync_date', '>=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Synced This Week" name="filter_synced_week" 
+                        domain="[('last_sync_date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Never Synced" name="filter_never_synced" 
+                        domain="[('last_sync_date', '=', False)]"/>
+                        
+                <group expand="0" string="Group By">
+                    <filter string="Repository Type" name="group_repository_type" 
+                            context="{'group_by': 'repository_type'}"/>
+                    <filter string="Connection Status" name="group_connection_status" 
+                            context="{'group_by': 'connection_status'}"/>
+                    <filter string="Project" name="group_project" 
+                            context="{'group_by': 'project_id'}"/>
+                    <filter string="Owner" name="group_owner" 
+                            context="{'group_by': 'owner'}"/>
+                    <filter string="Company" name="group_company" 
+                            context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Git Repository Action -->
+    <record id="action_git_repository" model="ir.actions.act_window">
+        <field name="name">Git Repositories</field>
+        <field name="res_model">git.repository</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="view_git_repository_search"/>
+        <field name="context">{
+            'search_default_filter_connected': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Git repository connection!
+            </p>
+            <p>
+                Connect to GitHub or GitLab repositories to start mapping commits to timesheets.
+                You can connect both public and private repositories.
+            </p>
+        </field>
+    </record>
+
+    <!-- Repository Configuration Action -->
+    <record id="action_git_repository_config" model="ir.actions.act_window">
+        <field name="name">Repository Configuration</field>
+        <field name="res_model">git.repository</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_git_repository_form"/>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_repository_type': 'github',
+            'default_is_private': False,
+        }</field>
+    </record>
+
+</odoo>

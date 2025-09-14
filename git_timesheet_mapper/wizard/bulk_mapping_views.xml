@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Bulk Mapping Wizard Form View -->
+    <record id="view_bulk_mapping_wizard_form" model="ir.ui.view">
+        <field name="name">bulk.mapping.wizard.form</field>
+        <field name="model">bulk.mapping.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Bulk Commit Mapping">
+                <header>
+                    <!-- Progress Bar -->
+                    <div class="o_form_header_progress">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped" 
+                                 t-att-style="'width: ' + record.progress_percentage.value + '%'">
+                                <t t-esc="Math.round(record.progress_percentage.value)"/>%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Buttons -->
+                    <button name="action_previous_step" string="Previous" type="object" 
+                            class="btn-secondary" icon="fa-arrow-left"
+                            attrs="{'invisible': [('state', 'in', ['select_commits', 'processing', 'complete'])]}"/>
+                    
+                    <button name="action_next_step" string="Next" type="object" 
+                            class="btn-primary" icon="fa-arrow-right"
+                            attrs="{'invisible': [('state', 'in', ['processing', 'complete'])]}"/>
+                    
+                    <button name="action_process_mappings" string="Create Mappings" type="object" 
+                            class="btn-success" icon="fa-play"
+                            attrs="{'invisible': [('state', '!=', 'preview')]}"/>
+                    
+                    <button name="action_view_created_mappings" string="View Mappings" type="object" 
+                            class="btn-info" icon="fa-eye"
+                            attrs="{'invisible': [('state', '!=', 'complete')]}"/>
+                    
+                    <button string="Close" special="cancel" class="btn-secondary"
+                            attrs="{'invisible': [('state', '!=', 'complete')]}"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="wizard_title" readonly="1"/></h1>
+                    </div>
+                    
+                    <!-- Step 1: Select Commits -->
+                    <div attrs="{'invisible': [('state', '!=', 'select_commits')]}">
+                        <group string="Repository and Filters">
+                            <group>
+                                <field name="repository_id" options="{'no_create': True}"/>
+                                <field name="branch_name" attrs="{'invisible': [('repository_id', '=', False)]}"/>
+                                <field name="commit_type"/>
+                                <field name="only_unmapped"/>
+                            </group>
+                            <group>
+                                <field name="commit_date_from"/>
+                                <field name="commit_date_to"/>
+                                <field name="commit_author" placeholder="Author name or email"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Available Commits" class="commit_selection_group">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button name="action_refresh_commits" string="Refresh" type="object" 
+                                            class="btn-secondary btn-sm" icon="fa-refresh"/>
+                                    <span class="ml-2 text-muted">
+                                        <field name="commit_count"/> commits available
+                                    </span>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <button name="action_select_all_commits" string="Select All" type="object" 
+                                            class="btn-link btn-sm" icon="fa-check-square-o"/>
+                                    <button name="action_deselect_all_commits" string="Deselect All" type="object" 
+                                            class="btn-link btn-sm" icon="fa-square-o"/>
+                                    <span class="ml-2 text-info">
+                                        <field name="selected_commit_count"/> selected
+                                    </span>
+                                </div>
+                            </div>
+                        </group>
+                        
+                        <field name="selected_commit_ids" nolabel="1" 
+                               context="{'default_repository_id': repository_id}"
+                               domain="[('id', 'in', available_commit_ids)]">
+                            <tree string="Select Commits" editable="false" 
+                                  decoration-info="commit_type == 'feature'"
+                                  decoration-warning="commit_type == 'bugfix'"
+                                  decoration-muted="commit_type == 'chore'">
+                                <field name="short_hash"/>
+                                <field name="commit_message_short"/>
+                                <field name="author_name"/>
+                                <field name="commit_date" widget="datetime"/>
+                                <field name="branch_name"/>
+                                <field name="commit_type" widget="badge"/>
+                                <field name="files_changed"/>
+                                <field name="total_changes"/>
+                                <field name="is_mapped" widget="boolean" readonly="1"/>
+                            </tree>
+                        </field>
+                        
+                        <div class="text-muted mt-2" 
+                             attrs="{'invisible': [('commit_count', '>', 0)]}">
+                            <p><i class="fa fa-info-circle"/> No commits found with current filters.</p>
+                            <p>Try adjusting the date range, branch, or other filter criteria.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Select Timesheet -->
+                    <div attrs="{'invisible': [('state', '!=', 'select_timesheet')]}">
+                        <group string="Target Selection">
+                            <field name="timesheet_selection_mode" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                        
+                        <group string="Timesheet Target" 
+                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'single')]}">
+                            <field name="target_timesheet_id" nolabel="1" 
+                                   placeholder="Select a specific timesheet entry"/>
+                        </group>
+                        
+                        <group string="Project Target" col="2"
+                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'project')]}">
+                            <field name="target_project_id"/>
+                            <field name="timesheet_date_from"/>
+                            <field name="timesheet_date_to"/>
+                        </group>
+                        
+                        <group string="Task Target" col="2"
+                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'task')]}">
+                            <field name="target_project_id"/>
+                            <field name="target_task_id"/>
+                            <field name="timesheet_date_from"/>
+                            <field name="timesheet_date_to"/>
+                        </group>
+                        
+                        <group string="Employee Target" col="2"
+                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'employee')]}">
+                            <field name="target_employee_id"/>
+                            <field name="timesheet_date_from"/>
+                            <field name="timesheet_date_to"/>
+                        </group>
+                        
+                        <group string="Target Timesheets" class="timesheet_preview_group">
+                            <div class="text-info">
+                                <field name="target_timesheet_ids" nolabel="1" readonly="1">
+                                    <tree string="Target Timesheets" create="false" edit="false" limit="10">
+                                        <field name="name"/>
+                                        <field name="project_id"/>
+                                        <field name="task_id"/>
+                                        <field name="employee_id"/>
+                                        <field name="date"/>
+                                        <field name="unit_amount" widget="float_time"/>
+                                    </tree>
+                                </field>
+                                <div class="mt-2 text-muted" t-if="len(target_timesheet_ids) == 0">
+                                    <p><i class="fa fa-warning"/> No timesheet entries found with current criteria.</p>
+                                </div>
+                                <div class="mt-2 text-success" t-if="len(target_timesheet_ids) > 0">
+                                    <p><i class="fa fa-check"/> Found <t t-esc="len(target_timesheet_ids)"/> timesheet entries.</p>
+                                </div>
+                            </div>
+                        </group>
+                    </div>
+                    
+                    <!-- Step 3: Preview Mappings -->
+                    <div attrs="{'invisible': [('state', '!=', 'preview')]}">
+                        <group string="Mapping Configuration">
+                            <group>
+                                <field name="mapping_method"/>
+                                <field name="auto_verify"/>
+                            </group>
+                            <group>
+                                <field name="mapping_description" placeholder="Optional description for all mappings"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Preview Mappings">
+                            <div class="alert alert-info">
+                                <strong>Preview:</strong> 
+                                <t t-esc="len(selected_commit_ids)"/> commits will be mapped to 
+                                <t t-esc="len(target_timesheet_ids)"/> timesheet entries.
+                            </div>
+                        </group>
+                        
+                        <field name="preview_mapping_ids" nolabel="1" readonly="1">
+                            <tree string="Mapping Preview" create="false" edit="false">
+                                <field name="commit_hash"/>
+                                <field name="commit_message"/>
+                                <field name="commit_author"/>
+                                <field name="timesheet_name"/>
+                                <field name="project_name"/>
+                                <field name="task_name"/>
+                                <field name="confidence_score" widget="progressbar"/>
+                                <field name="mapping_method" widget="badge"/>
+                            </tree>
+                        </field>
+                        
+                        <div class="alert alert-warning mt-3" 
+                             t-if="len(preview_mapping_ids) == 0">
+                            <strong>Warning:</strong> No mappings will be created. 
+                            Please go back and check your selections.
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Processing -->
+                    <div attrs="{'invisible': [('state', '!=', 'processing')]}">
+                        <group string="Processing Status">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"/>
+                                <h4>Processing Mappings...</h4>
+                                <p><field name="processing_status" readonly="1"/></p>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="text-success">
+                                            <strong><field name="mappings_created" readonly="1"/></strong>
+                                            <br/>Created
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="text-danger">
+                                            <strong><field name="mappings_failed" readonly="1"/></strong>
+                                            <br/>Failed
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </group>
+                    </div>
+                    
+                    <!-- Step 5: Complete -->
+                    <div attrs="{'invisible': [('state', '!=', 'complete')]}">
+                        <group string="Results Summary">
+                            <div class="text-center">
+                                <i class="fa fa-check-circle fa-3x text-success mb-3"/>
+                                <h4>Bulk Mapping Complete!</h4>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-4">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title text-success">
+                                                    <field name="mappings_created" readonly="1"/>
+                                                </h5>
+                                                <p class="card-text">Mappings Created</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title text-danger">
+                                                    <field name="mappings_failed" readonly="1"/>
+                                                </h5>
+                                                <p class="card-text">Mappings Failed</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h5 class="card-title text-info">
+                                                    <t t-esc="record.mappings_created.value + record.mappings_failed.value"/>
+                                                </h5>
+                                                <p class="card-text">Total Processed</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4" attrs="{'invisible': [('mappings_failed', '=', 0)]}">
+                                    <button type="button" class="btn btn-link" data-toggle="collapse" 
+                                            data-target="#errorLog" aria-expanded="false">
+                                        <i class="fa fa-exclamation-triangle"/> View Error Details
+                                    </button>
+                                    <div class="collapse mt-2" id="errorLog">
+                                        <div class="card card-body">
+                                            <field name="error_log" readonly="1" widget="text"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </group>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Bulk Mapping Preview Tree View -->
+    <record id="view_bulk_mapping_preview_tree" model="ir.ui.view">
+        <field name="name">bulk.mapping.preview.tree</field>
+        <field name="model">bulk.mapping.preview</field>
+        <field name="arch" type="xml">
+            <tree string="Mapping Preview" create="false" edit="false" delete="false">
+                <field name="commit_hash"/>
+                <field name="commit_message"/>
+                <field name="commit_author"/>
+                <field name="timesheet_name"/>
+                <field name="project_name"/>
+                <field name="task_name"/>
+                <field name="confidence_score" widget="progressbar"/>
+                <field name="mapping_method" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Bulk Mapping Wizard Action -->
+    <record id="action_bulk_mapping_wizard" model="ir.actions.act_window">
+        <field name="name">Bulk Commit Mapping</field>
+        <field name="res_model">bulk.mapping.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_bulk_mapping_wizard_form"/>
+        <field name="target">new</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Bulk Mapping Wizard Action from Commits -->
+    <record id="action_bulk_mapping_wizard_from_commits" model="ir.actions.act_window">
+        <field name="name">Bulk Map Selected Commits</field>
+        <field name="res_model">bulk.mapping.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_bulk_mapping_wizard_form"/>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_selected_commit_ids': active_ids,
+            'default_state': 'select_timesheet'
+        }</field>
+    </record>
+
+    <!-- Menu Action Integration -->
+    <record id="action_bulk_mapping_wizard_menu" model="ir.actions.act_window">
+        <field name="name">Bulk Mapping Wizard</field>
+        <field name="res_model">bulk.mapping.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_bulk_mapping_wizard_form"/>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_only_unmapped': True,
+            'default_commit_date_from': (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'),
+            'default_commit_date_to': context_today().strftime('%Y-%m-%d')
+        }</field>
+    </record>
+
+</odoo>
