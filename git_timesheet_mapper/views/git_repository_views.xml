@@ -64,10 +64,8 @@
                     
                     <group string="Connection Status" name="status_group">
                         <field name="last_sync_date" readonly="1"/>
-                        <field name="last_error_message" readonly="1" 
-                               attrs="{'invisible': [('last_error_message', '=', False)]}"/>
-                        <field name="sync_frequency" 
-                               attrs="{'invisible': [('connection_status', '!=', 'connected')]}"/>
+                        <field name="connection_error" readonly="1" 
+                               attrs="{'invisible': [('connection_error', '=', False)]}"/>
                     </group>
                     
                     <group string="Statistics" name="stats_group" col="4">
