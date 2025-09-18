@@ -166,8 +166,7 @@
                         <group string="Preview Mappings">
                             <div class="alert alert-info">
                                 <strong>Preview:</strong> 
-                                <field name="selected_commit_count" readonly="1"/> commits will be mapped to 
-                                <field name="target_timesheet_count" readonly="1"/> timesheet entries.
+                                <field name="selected_commit_count" readonly="1"/> commits will be mapped to selected timesheet entries.
                             </div>
                         </group>
                         
@@ -243,9 +242,9 @@
                                         <div class="card text-center">
                                             <div class="card-body">
                                                 <h5 class="card-title text-info">
-                                                    <field name="total_processed" readonly="1"/>
+                                                    <field name="selected_commit_count" readonly="1"/>
                                                 </h5>
-                                                <p class="card-text">Total Processed</p>
+                                                <p class="card-text">Total Selected</p>
                                             </div>
                                         </div>
                                     </div>
