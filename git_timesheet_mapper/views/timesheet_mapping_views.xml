@@ -11,9 +11,6 @@
                             class="btn-primary" icon="fa-code-fork"/>
                     <button name="action_view_timesheet" string="View Timesheet" type="object" 
                             class="btn-secondary" icon="fa-clock-o"/>
-                    <button name="action_remove_mapping" string="Remove Mapping" type="object" 
-                            class="btn-danger" icon="fa-unlink"
-                            confirm="Are you sure you want to remove this mapping?"/>
                     <field name="mapping_method" widget="statusbar" 
                            statusbar_visible="manual,automatic,bulk,api"/>
                 </header>
@@ -147,9 +144,6 @@
                         icon="fa-code-fork" class="btn-link"/>
                 <button name="action_view_timesheet" string="View Timesheet" type="object" 
                         icon="fa-clock-o" class="btn-link"/>
-                <button name="action_remove_mapping" string="Remove" type="object" 
-                        icon="fa-trash" class="btn-link text-danger"
-                        confirm="Remove this mapping?"/>
             </tree>
         </field>
     </record>
@@ -215,10 +209,6 @@
                                         </a>
                                         <a name="action_view_timesheet" type="object">
                                             <i class="fa fa-clock-o"/> View Timesheet
-                                        </a>
-                                        <a name="action_remove_mapping" type="object" class="text-danger"
-                                           data-confirm="Remove this mapping?">
-                                            <i class="fa fa-trash"/> Remove Mapping
                                         </a>
                                     </div>
                                 </div>
@@ -381,9 +371,6 @@
                     <field name="commit_count" readonly="1"/>
                     <field name="total_commit_changes" readonly="1"/>
                     <field name="last_commit_date" readonly="1"/>
-                    <button name="action_view_mapped_commits" string="View Commits" type="object" 
-                            class="btn-info" icon="fa-code-fork"
-                            attrs="{'invisible': [('commit_count', '=', 0)]}"/>
                 </group>
             </xpath>
         </field>
@@ -400,9 +387,6 @@
             </xpath>
             <field name="unit_amount" position="after">
                 <field name="commit_count" string="Commits" optional="hide"/>
-                <button name="action_view_mapped_commits" string="View Commits" type="object" 
-                        icon="fa-code-fork" class="btn-link"
-                        attrs="{'invisible': [('commit_count', '=', 0)]}"/>
             </field>
         </field>
     </record>

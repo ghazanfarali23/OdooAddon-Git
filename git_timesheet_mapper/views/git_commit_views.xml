@@ -23,12 +23,6 @@
                         <button name="action_view_mappings" type="object" class="oe_stat_button" icon="fa-link">
                             <field name="mapping_count" widget="statinfo" string="Mappings"/>
                         </button>
-                        <button name="action_view_files" type="object" class="oe_stat_button" icon="fa-file-code-o">
-                            <field name="files_changed" widget="statinfo" string="Files"/>
-                        </button>
-                        <button name="action_view_changes" type="object" class="oe_stat_button" icon="fa-plus-minus">
-                            <field name="total_changes" widget="statinfo" string="Changes"/>
-                        </button>
                     </div>
                     
                     <div class="oe_title">
@@ -80,8 +74,6 @@
                                     <field name="mapping_date"/>
                                     <field name="mapping_method"/>
                                     <field name="description"/>
-                                    <button name="action_remove_mapping" string="Remove" type="object" 
-                                            icon="fa-trash" class="btn-link text-danger"/>
                                 </tree>
                             </field>
                         </page>
