@@ -45,14 +45,14 @@
                             <field name="mapped_by" readonly="1"/>
                             <field name="mapping_date" readonly="1"/>
                             <field name="confidence_score" readonly="1" widget="progressbar" 
-                                   attrs="{'invisible': [('mapping_method', '!=', 'automatic')]}"/>
+                                   invisible="mapping_method != automatic"/>
                         </group>
                         <group>
                             <field name="is_verified" widget="boolean"/>
                             <field name="verified_by" readonly="1" 
-                                   attrs="{'invisible': [('is_verified', '=', False)]}"/>
+                                   invisible="is_verified == False"/>
                             <field name="verified_date" readonly="1"
-                                   attrs="{'invisible': [('is_verified', '=', False)]}"/>
+                                   invisible="is_verified == False"/>
                         </group>
                     </group>
                     
@@ -137,7 +137,7 @@
                 <field name="mapping_date" widget="datetime"/>
                 <field name="mapped_by"/>
                 <field name="confidence_score" widget="progressbar" 
-                       attrs="{'invisible': [('mapping_method', '!=', 'automatic')]}"/>
+                       invisible="mapping_method != automatic"/>
                 <field name="is_verified" widget="boolean_toggle"/>
                 <field name="description"/>
                 <button name="action_view_commit" string="View Commit" type="object" 
@@ -367,7 +367,7 @@
         <field name="arch" type="xml">
             <xpath expr="//form/sheet" position="inside">
                 <group string="Git Integration" name="git_integration" 
-                       attrs="{'invisible': [('commit_count', '=', 0)]}">
+                       invisible="commit_count == 0">
                     <field name="commit_count" readonly="1"/>
                     <field name="total_commit_changes" readonly="1"/>
                     <field name="last_commit_date" readonly="1"/>

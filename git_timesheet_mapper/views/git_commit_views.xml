@@ -9,10 +9,10 @@
                 <header>
                     <button name="action_create_mapping" string="Create Mapping" type="object" 
                             class="btn-primary" icon="fa-link"
-                            attrs="{'invisible': [('is_mapped', '=', True)]}"/>
+                            invisible="is_mapped == True"/>
                     <button name="action_view_mappings" string="View Mappings" type="object" 
                             class="btn-info" icon="fa-eye"
-                            attrs="{'invisible': [('mapping_count', '=', 0)]}"/>
+                            invisible="mapping_count == 0"/>
                     <button name="action_open_commit_url" string="Open in Git" type="object" 
                             class="btn-secondary" icon="fa-external-link"/>
                     <field name="commit_type" widget="statusbar" 
@@ -44,9 +44,9 @@
                         <group name="mapping_info">
                             <field name="is_mapped" readonly="1" widget="boolean"/>
                             <field name="first_mapped_date" readonly="1" 
-                                   attrs="{'invisible': [('is_mapped', '=', False)]}"/>
+                                   invisible="is_mapped == False"/>
                             <field name="last_mapped_date" readonly="1"
-                                   attrs="{'invisible': [('is_mapped', '=', False)]}"/>
+                                   invisible="is_mapped == False"/>
                         </group>
                     </group>
                     
@@ -64,7 +64,7 @@
                     
                     <notebook>
                         <page string="Mappings" name="mappings" 
-                              attrs="{'invisible': [('mapping_count', '=', 0)]}">
+                              invisible="mapping_count == 0">
                             <field name="mapping_ids" readonly="1" nolabel="1">
                                 <tree string="Timesheet Mappings" create="false" edit="false">
                                     <field name="timesheet_line_id"/>
@@ -135,10 +135,10 @@
                 <field name="time_since_commit" string="Age"/>
                 <button name="action_create_mapping" string="Map to Timesheet" type="object" 
                         icon="fa-link" class="btn-link"
-                        attrs="{'invisible': [('is_mapped', '=', True)]}"/>
+                        invisible="is_mapped == True"/>
                 <button name="action_view_mappings" string="View Mappings" type="object" 
                         icon="fa-eye" class="btn-link"
-                        attrs="{'invisible': [('mapping_count', '=', 0)]}"/>
+                        invisible="mapping_count == 0"/>
             </tree>
         </field>
     </record>
