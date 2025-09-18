@@ -78,7 +78,7 @@
                         <field name="selected_commit_ids" nolabel="1" 
                                context="{'default_repository_id': repository_id}"
                                domain="[('id', 'in', available_commit_ids)]">
-                            <list string="Select Commits" editable="false" 
+                            <list string="Select Commits" 
                                   decoration-info="commit_type == 'feature'"
                                   decoration-warning="commit_type == 'bugfix'"
                                   decoration-muted="commit_type == 'chore'">
