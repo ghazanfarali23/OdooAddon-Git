@@ -15,20 +15,17 @@
                             attrs="{'invisible': [('connection_status', '!=', 'connected')]}"/>
                     <button name="action_view_commits" string="View Commits" type="object" 
                             class="btn-info" icon="fa-code-fork"
-                            attrs="{'invisible': [('commit_count', '=', 0)]}"/>
+                            attrs="{'invisible': [('total_commits', '=', 0)]}"/>
                     <field name="connection_status" widget="statusbar" 
                            statusbar_visible="disconnected,testing,connected,error"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_commits" type="object" class="oe_stat_button" icon="fa-code-fork">
-                            <field name="commit_count" widget="statinfo" string="Commits"/>
+                            <field name="total_commits" widget="statinfo" string="Commits"/>
                         </button>
                         <button name="action_view_mappings" type="object" class="oe_stat_button" icon="fa-link">
-                            <field name="mapping_count" widget="statinfo" string="Mappings"/>
-                        </button>
-                        <button name="action_view_branches" type="object" class="oe_stat_button" icon="fa-code-fork">
-                            <field name="branch_count" widget="statinfo" string="Branches"/>
+                            <field name="mapped_commits" widget="statinfo" string="Mappings"/>
                         </button>
                     </div>
                     
@@ -85,18 +82,10 @@
                             <group>
                                 <field name="description" nolabel="1" placeholder="Repository description..."/>
                             </group>
-                            <group string="Repository Information" col="2">
-                                <field name="language" readonly="1"/>
-                                <field name="size" readonly="1"/>
-                                <field name="open_issues_count" readonly="1"/>
-                                <field name="forks_count" readonly="1"/>
-                                <field name="stars_count" readonly="1"/>
-                                <field name="watchers_count" readonly="1"/>
-                            </group>
                         </page>
                         
                         <page string="Recent Commits" name="recent_commits" 
-                              attrs="{'invisible': [('commit_count', '=', 0)]}">
+                              attrs="{'invisible': [('total_commits', '=', 0)]}">
                             <field name="commit_ids" readonly="1" nolabel="1">
                                 <tree string="Recent Commits" limit="10" create="false" edit="false">
                                     <field name="commit_hash"/>
@@ -104,9 +93,9 @@
                                     <field name="author_name"/>
                                     <field name="commit_message_short"/>
                                     <field name="commit_date"/>
-                                    <field name="branch_name"/>
+                                    <field name="default_branch"/>
                                     <field name="is_mapped" widget="boolean_toggle"/>
-                                    <field name="mapping_count"/>
+                                    <field name="mapped_commits"/>
                                 </tree>
                             </field>
                         </page>
@@ -149,7 +138,7 @@
                        decoration-danger="connection_status == 'error'"
                        decoration-warning="connection_status == 'testing'"
                        decoration-muted="connection_status == 'disconnected'"/>
-                <field name="commit_count" widget="integer"/>
+                <field name="total_commits" widget="integer"/>
                 <field name="mapped_commits" widget="integer"/>
                 <field name="unmapped_commits" widget="integer"/>
                 <field name="last_sync_date" widget="datetime"/>
@@ -175,7 +164,7 @@
                 <field name="name"/>
                 <field name="repository_type"/>
                 <field name="connection_status"/>
-                <field name="commit_count"/>
+                <field name="total_commits"/>
                 <field name="mapped_commits"/>
                 <field name="unmapped_commits"/>
                 <field name="last_sync_date"/>
@@ -217,7 +206,7 @@
                                             <i class="fa fa-refresh"/> Sync Commits
                                         </a>
                                         <a name="action_view_commits" type="object"
-                                           t-if="record.commit_count.raw_value > 0">
+                                           t-if="record.total_commits.raw_value > 0">
                                             <i class="fa fa-code-fork"/> View Commits
                                         </a>
                                     </div>
@@ -247,7 +236,7 @@
                                             <div class="col-6 o_kanban_primary_left">
                                                 <button class="btn btn-primary btn-sm" type="object" 
                                                         name="action_view_commits">
-                                                    <span t-esc="record.commit_count.value"/> Commits
+                                                    <span t-esc="record.total_commits.value"/> Commits
                                                 </button>
                                             </div>
                                             <div class="col-6 o_kanban_primary_right">
@@ -303,11 +292,11 @@
                         domain="[('repository_type', '=', 'gitlab')]"/>
                 <separator/>
                 <filter string="Has Commits" name="filter_has_commits" 
-                        domain="[('commit_count', '>', 0)]"/>
+                        domain="[('total_commits', '>', 0)]"/>
                 <filter string="No Commits" name="filter_no_commits" 
-                        domain="[('commit_count', '=', 0)]"/>
+                        domain="[('total_commits', '=', 0)]"/>
                 <filter string="Has Mappings" name="filter_has_mappings" 
-                        domain="[('mapping_count', '>', 0)]"/>
+                        domain="[('mapped_commits', '>', 0)]"/>
                 <separator/>
                 <filter string="Synced Today" name="filter_synced_today" 
                         domain="[('last_sync_date', '>=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>

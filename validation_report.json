@@ -1,8 +1,53 @@
 {
-  "timestamp": "2025-09-18T16:22:31.967913",
-  "addon_name": "git_timesheet_mapper",
-  "validation_status": "PASSED",
-  "checks_passed": 5,
-  "total_checks": 5,
-  "issues": []
+  "total_checks": 6,
+  "passed": 6,
+  "failed": 0,
+  "warnings": 0,
+  "duration": 0.0,
+  "overall_status": "passed",
+  "details": {
+    "frontend_assets": {
+      "status": "passed",
+      "details": {
+        "validated_files": 6,
+        "message": "All frontend assets are present and valid"
+      }
+    },
+    "backend_apis": {
+      "status": "passed",
+      "details": {
+        "api_files": 5,
+        "endpoints_found": 2,
+        "total_endpoints": 12
+      }
+    },
+    "component_integration": {
+      "status": "passed",
+      "details": {
+        "passed_checks": 4,
+        "message": "All integration checks passed"
+      }
+    },
+    "responsive_design": {
+      "status": "passed",
+      "details": {
+        "responsive_features": 5,
+        "total_checks": 5
+      }
+    },
+    "accessibility": {
+      "status": "passed",
+      "details": {
+        "accessibility_features": 3,
+        "total_checks": 5
+      }
+    },
+    "performance": {
+      "status": "passed",
+      "details": {
+        "performance_features": 3,
+        "total_checks": 4
+      }
+    }
+  }
 }
