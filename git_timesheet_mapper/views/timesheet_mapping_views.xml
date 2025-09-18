@@ -27,14 +27,13 @@
                         <group name="commit_info" string="Commit Information">
                             <field name="commit_id" readonly="1"/>
                             <field name="repository_id" readonly="1"/>
-                            <field name="branch_name" readonly="1"/>
                             <field name="commit_author" readonly="1"/>
                             <field name="commit_date" readonly="1"/>
                         </group>
                         <group name="timesheet_info" string="Timesheet Information">
                             <field name="project_id" readonly="1"/>
                             <field name="task_id" readonly="1"/>
-                            <field name="employee_id" readonly="1"/>
+                            <field name="timesheet_user_id" readonly="1"/>
                             <field name="timesheet_date" readonly="1"/>
                             <field name="timesheet_hours" readonly="1" widget="float_time"/>
                         </group>
@@ -45,75 +44,14 @@
                             <field name="mapped_by" readonly="1"/>
                             <field name="mapping_date" readonly="1"/>
                             <field name="confidence_score" readonly="1" widget="progressbar" 
-                                   invisible="mapping_method != automatic"/>
-                        </group>
-                        <group>
-                            <field name="is_verified" widget="boolean"/>
-                            <field name="verified_by" readonly="1" 
-                                   invisible="is_verified == False"/>
-                            <field name="verified_date" readonly="1"
-                                   invisible="is_verified == False"/>
+                                   invisible="mapping_method != 'automatic'"/>
                         </group>
                     </group>
                     
                     <group string="Description">
                         <field name="description" nolabel="1" placeholder="Optional description or notes about this mapping..."/>
                     </group>
-                    
-                    <notebook>
-                        <page string="Commit Details" name="commit_details">
-                            <group col="2">
-                                <group>
-                                    <field name="commit_message_short" readonly="1"/>
-                                    <field name="commit_type" readonly="1" widget="badge"/>
-                                    <field name="files_changed" readonly="1"/>
-                                    <field name="lines_added" readonly="1"/>
-                                    <field name="lines_deleted" readonly="1"/>
-                                </group>
-                                <group>
-                                    <field name="commit_url" readonly="1" widget="url"/>
-                                    <field name="commit_size" readonly="1"/>
-                                </group>
-                            </group>
-                            <group>
-                                <field name="commit_message_full" readonly="1" nolabel="1" 
-                                       widget="text" options="{'no_resize': true}"/>
-                            </group>
-                        </page>
-                        
-                        <page string="Timesheet Details" name="timesheet_details">
-                            <group col="2">
-                                <group>
-                                    <field name="timesheet_description" readonly="1" widget="text"/>
-                                    <field name="timesheet_unit_amount" readonly="1" widget="float_time"/>
-                                </group>
-                                <group>
-                                    <field name="project_name" readonly="1"/>
-                                    <field name="task_name" readonly="1"/>
-                                    <field name="employee_name" readonly="1"/>
-                                </group>
-                            </group>
-                        </page>
-                        
-                        <page string="Mapping History" name="history">
-                            <field name="mapping_history_ids" readonly="1" nolabel="1">
-                                <list string="History" create="false" edit="false">
-                                    <field name="action_type"/>
-                                    <field name="action_date"/>
-                                    <field name="user_id"/>
-                                    <field name="old_values"/>
-                                    <field name="new_values"/>
-                                    <field name="notes"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
@@ -124,21 +62,18 @@
         <field name="model">timesheet.commit.mapping</field>
         <field name="arch" type="xml">
             <list string="Commit Mappings" multi_edit="1" sample="1"
-                  decoration-success="is_verified == True"
-                  decoration-info="mapping_method == 'automatic'"
-                  decoration-muted="mapping_method == 'manual'">
+                  decoration-info="mapping_method == 'automatic'">
                 <field name="commit_hash"/>
-                <field name="commit_message_short"/>
+                <field name="commit_message"/>
                 <field name="timesheet_line_id"/>
                 <field name="project_id"/>
                 <field name="task_id"/>
-                <field name="employee_id"/>
+                <field name="timesheet_user_id"/>
                 <field name="mapping_method" widget="badge"/>
                 <field name="mapping_date" widget="datetime"/>
                 <field name="mapped_by"/>
                 <field name="confidence_score" widget="progressbar" 
-                       invisible="mapping_method != automatic"/>
-                <field name="is_verified" widget="boolean_toggle"/>
+                       invisible="mapping_method != 'automatic'"/>
                 <field name="description"/>
                 <button name="action_view_commit" string="View Commit" type="object" 
                         icon="fa-code-fork" class="btn-link"/>
@@ -157,30 +92,23 @@
                     default_group_by="project_id">
                 <field name="id"/>
                 <field name="commit_hash"/>
-                <field name="commit_message_short"/>
+                <field name="commit_message"/>
                 <field name="timesheet_line_id"/>
                 <field name="project_id"/>
                 <field name="task_id"/>
-                <field name="employee_id"/>
+                <field name="timesheet_user_id"/>
                 <field name="mapping_method"/>
                 <field name="mapping_date"/>
                 <field name="mapped_by"/>
                 <field name="confidence_score"/>
-                <field name="is_verified"/>
                 <field name="description"/>
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_card oe_kanban_global_click"
-                             t-att-class="record.is_verified.raw_value ? 'o_kanban_card_verified' : 'o_kanban_card_unverified'">
+                        <div class="oe_kanban_card oe_kanban_global_click">
                             <div class="o_kanban_card_header">
                                 <div class="o_kanban_card_header_title">
                                     <div class="o_primary">
                                         <strong><t t-esc="record.commit_hash.value"/></strong>
-                                        <span class="badge badge-pill ml-1"
-                                              t-att-class="record.is_verified.raw_value ? 'badge-success' : 'badge-warning'">
-                                            <t t-if="record.is_verified.raw_value">Verified</t>
-                                            <t t-else="">Unverified</t>
-                                        </span>
                                     </div>
                                     <div class="o_secondary">
                                         <span class="badge" 
@@ -191,48 +119,17 @@
                                         </span>
                                     </div>
                                 </div>
-                                <div class="o_kanban_manage_button_section">
-                                    <a class="o_kanban_manage_toggle_button" href="#">
-                                        <i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/>
-                                    </a>
-                                </div>
                             </div>
                             
                             <div class="o_kanban_card_content">
-                                <div class="o_kanban_card_manage_section o_kanban_manage_view">
-                                    <div class="o_kanban_card_manage_section_header">
-                                        <span class="o_kanban_card_manage_title">Actions</span>
-                                    </div>
-                                    <div>
-                                        <a name="action_view_commit" type="object">
-                                            <i class="fa fa-code-fork"/> View Commit
-                                        </a>
-                                        <a name="action_view_timesheet" type="object">
-                                            <i class="fa fa-clock-o"/> View Timesheet
-                                        </a>
-                                    </div>
-                                </div>
-                                
                                 <div class="o_kanban_card_lower_content">
                                     <div class="o_primary">
-                                        <t t-esc="record.commit_message_short.value"/>
+                                        <t t-esc="record.commit_message.value"/>
                                     </div>
                                     <div class="text-muted">
                                         <i class="fa fa-clock-o"/> <t t-esc="record.timesheet_line_id.value"/>
                                         <br/>
-                                        <i class="fa fa-user"/> <t t-esc="record.employee_id.value"/>
-                                    </div>
-                                </div>
-                                
-                                <div class="o_kanban_card_lower_content" 
-                                     t-if="record.mapping_method.raw_value == 'automatic'">
-                                    <div class="progress mb-2">
-                                        <div class="progress-bar" 
-                                             t-att-style="'width: ' + record.confidence_score.value + '%'"
-                                             t-att-class="record.confidence_score.raw_value >= 80 ? 'bg-success' : 
-                                                         record.confidence_score.raw_value >= 60 ? 'bg-warning' : 'bg-danger'">
-                                            <t t-esc="record.confidence_score.value"/>% confidence
-                                        </div>
+                                        <i class="fa fa-user"/> <t t-esc="record.timesheet_user_id.value"/>
                                     </div>
                                 </div>
                                 
@@ -262,34 +159,22 @@
         <field name="arch" type="xml">
             <search string="Commit Mappings">
                 <field name="commit_hash" string="Commit Hash"/>
-                <field name="commit_message_short" string="Commit Message"/>
+                <field name="commit_message" string="Commit Message"/>
                 <field name="timesheet_line_id" string="Timesheet"/>
                 <field name="project_id"/>
                 <field name="task_id"/>
-                <field name="employee_id"/>
+                <field name="timesheet_user_id"/>
                 <field name="mapped_by"/>
                 <field name="description"/>
                 
-                <filter string="Verified" name="filter_verified" 
-                        domain="[('is_verified', '=', True)]"/>
-                <filter string="Unverified" name="filter_unverified" 
-                        domain="[('is_verified', '=', False)]"/>
-                <separator/>
                 <filter string="Manual" name="filter_manual" 
                         domain="[('mapping_method', '=', 'manual')]"/>
                 <filter string="Automatic" name="filter_automatic" 
                         domain="[('mapping_method', '=', 'automatic')]"/>
                 <filter string="Bulk" name="filter_bulk" 
                         domain="[('mapping_method', '=', 'bulk')]"/>
-                <filter string="API" name="filter_api" 
-                        domain="[('mapping_method', '=', 'api')]"/>
-                <separator/>
-                <filter string="High Confidence" name="filter_high_confidence" 
-                        domain="[('confidence_score', '>=', 80)]"/>
-                <filter string="Medium Confidence" name="filter_medium_confidence" 
-                        domain="[('confidence_score', '>=', 60), ('confidence_score', '&lt;', 80)]"/>
-                <filter string="Low Confidence" name="filter_low_confidence" 
-                        domain="[('confidence_score', '&lt;', 60)]"/>
+                <filter string="Import" name="filter_import" 
+                        domain="[('mapping_method', '=', 'import')]"/>
                 <separator/>
                 <filter string="Today" name="filter_today" 
                         domain="[('mapping_date', '>=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
@@ -303,14 +188,12 @@
                             context="{'group_by': 'project_id'}"/>
                     <filter string="Task" name="group_task" 
                             context="{'group_by': 'task_id'}"/>
-                    <filter string="Employee" name="group_employee" 
-                            context="{'group_by': 'employee_id'}"/>
+                    <filter string="User" name="group_user" 
+                            context="{'group_by': 'timesheet_user_id'}"/>
                     <filter string="Mapping Method" name="group_mapping_method" 
                             context="{'group_by': 'mapping_method'}"/>
                     <filter string="Repository" name="group_repository" 
                             context="{'group_by': 'repository_id'}"/>
-                    <filter string="Verification Status" name="group_verification" 
-                            context="{'group_by': 'is_verified'}"/>
                     <filter string="Mapping Date" name="group_mapping_date" 
                             context="{'group_by': 'mapping_date:day'}"/>
                 </group>
@@ -335,59 +218,6 @@
                 Commit mappings will appear here when you link Git commits to timesheet entries.
                 You can create mappings from the Commits view or use the bulk mapping wizard.
             </p>
-        </field>
-    </record>
-
-    <!-- Unverified Mappings Action -->
-    <record id="action_timesheet_commit_mapping_unverified" model="ir.actions.act_window">
-        <field name="name">Unverified Mappings</field>
-        <field name="res_model">timesheet.commit.mapping</field>
-        <field name="view_mode">kanban,tree,form</field>
-        <field name="search_view_id" ref="view_timesheet_commit_mapping_search"/>
-        <field name="domain">[('is_verified', '=', False)]</field>
-        <field name="context">{
-            'search_default_filter_week': 1,
-        }</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                All mappings are verified!
-            </p>
-            <p>
-                This view shows commit mappings that haven't been verified yet.
-                Review automatic mappings and mark them as verified once confirmed.
-            </p>
-        </field>
-    </record>
-
-    <!-- Extended Timesheet Line View -->
-    <record id="view_account_analytic_line_form_inherit" model="ir.ui.view">
-        <field name="name">account.analytic.line.form.inherit</field>
-        <field name="model">account.analytic.line</field>
-        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//form/sheet" position="inside">
-                <group string="Git Integration" name="git_integration" 
-                       invisible="commit_count == 0">
-                    <field name="commit_count" readonly="1"/>
-                    <field name="total_commit_changes" readonly="1"/>
-                    <field name="last_commit_date" readonly="1"/>
-                </group>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- Extended Timesheet Tree View -->
-    <record id="view_account_analytic_line_tree_inherit" model="ir.ui.view">
-        <field name="name">account.analytic.line.tree.inherit</field>
-        <field name="model">account.analytic.line</field>
-        <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">commit_count > 0</attribute>
-            </xpath>
-            <field name="unit_amount" position="after">
-                <field name="commit_count" string="Commits" optional="hide"/>
-            </field>
         </field>
     </record>
 
