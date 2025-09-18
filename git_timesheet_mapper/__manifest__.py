@@ -47,8 +47,8 @@
         'views/git_repository_views.xml',
         'views/git_commit_views.xml',
         'views/timesheet_mapping_views.xml',
-        'views/menus.xml',
         'wizard/bulk_mapping_views.xml',
+        'views/menus.xml',
     ],
     'assets': {
         'web.assets_backend': [
