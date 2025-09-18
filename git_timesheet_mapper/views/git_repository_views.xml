@@ -83,7 +83,7 @@
         <field name="name">git.repository.tree</field>
         <field name="model">git.repository</field>
         <field name="arch" type="xml">
-            <tree string="Git Repositories" multi_edit="1">
+            <list string="Git Repositories" multi_edit="1">
                 <field name="name"/>
                 <field name="repository_type" widget="badge"/>
                 <field name="owner"/>
@@ -106,7 +106,7 @@
                 <button name="action_fetch_commits" string="Sync" type="object" 
                         icon="fa-refresh" class="btn-link"
                         invisible="connection_status != 'connected'"/>
-            </tree>
+            </list>
         </field>
     </record>
 

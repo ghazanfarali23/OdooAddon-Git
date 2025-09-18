@@ -97,14 +97,14 @@
                         
                         <page string="Mapping History" name="history">
                             <field name="mapping_history_ids" readonly="1" nolabel="1">
-                                <tree string="History" create="false" edit="false">
+                                <list string="History" create="false" edit="false">
                                     <field name="action_type"/>
                                     <field name="action_date"/>
                                     <field name="user_id"/>
                                     <field name="old_values"/>
                                     <field name="new_values"/>
                                     <field name="notes"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -123,7 +123,7 @@
         <field name="name">timesheet.commit.mapping.tree</field>
         <field name="model">timesheet.commit.mapping</field>
         <field name="arch" type="xml">
-            <tree string="Commit Mappings" multi_edit="1" sample="1"
+            <list string="Commit Mappings" multi_edit="1" sample="1"
                   decoration-success="is_verified == True"
                   decoration-info="mapping_method == 'automatic'"
                   decoration-muted="mapping_method == 'manual'">
@@ -144,7 +144,7 @@
                         icon="fa-code-fork" class="btn-link"/>
                 <button name="action_view_timesheet" string="View Timesheet" type="object" 
                         icon="fa-clock-o" class="btn-link"/>
-            </tree>
+            </list>
         </field>
     </record>
 

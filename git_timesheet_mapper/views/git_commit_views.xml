@@ -66,7 +66,7 @@
                         <page string="Mappings" name="mappings" 
                               invisible="mapping_count == 0">
                             <field name="mapping_ids" readonly="1" nolabel="1">
-                                <tree string="Timesheet Mappings" create="false" edit="false">
+                                <list string="Timesheet Mappings" create="false" edit="false">
                                     <field name="timesheet_line_id"/>
                                     <field name="project_id"/>
                                     <field name="task_id"/>
@@ -74,7 +74,7 @@
                                     <field name="mapping_date"/>
                                     <field name="mapping_method"/>
                                     <field name="description"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                         
@@ -118,7 +118,7 @@
         <field name="name">git.commit.tree</field>
         <field name="model">git.commit</field>
         <field name="arch" type="xml">
-            <tree string="Git Commits" multi_edit="1" sample="1" 
+            <list string="Git Commits" multi_edit="1" sample="1" 
                   decoration-success="is_mapped == True"
                   decoration-muted="is_mapped == False">
                 <field name="short_hash" readonly="1"/>
@@ -139,7 +139,7 @@
                 <button name="action_view_mappings" string="View Mappings" type="object" 
                         icon="fa-eye" class="btn-link"
                         invisible="mapping_count == 0"/>
-            </tree>
+            </list>
         </field>
     </record>
 
