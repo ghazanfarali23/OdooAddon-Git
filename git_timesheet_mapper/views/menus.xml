@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Git Integration Menu -->
+    <menuitem 
+        id="menu_git_integration_root"
+        name="Git Integration"
+        sequence="85"
+        web_icon="git_timesheet_mapper,static/description/icon.png"/>
+
+    <!-- Configuration Submenu -->
+    <menuitem 
+        id="menu_git_configuration"
+        name="Configuration"
+        parent="menu_git_integration_root"
+        sequence="10"/>
+
+    <!-- Git Repositories Menu -->
+    <menuitem 
+        id="menu_git_repositories"
+        name="Git Repositories"
+        parent="menu_git_configuration"
+        action="action_git_repository"
+        sequence="10"/>
+
+    <!-- Git Commits Menu -->
+    <menuitem 
+        id="menu_git_commits"
+        name="Git Commits"
+        parent="menu_git_integration_root"
+        action="action_git_commit"
+        sequence="20"/>
+
+    <!-- Timesheet Mappings Menu -->
+    <menuitem 
+        id="menu_timesheet_mappings"
+        name="Commit Mappings"
+        parent="menu_git_integration_root"
+        action="action_timesheet_commit_mapping"
+        sequence="30"/>
+
+    <!-- Bulk Mapping Wizard Menu -->
+    <menuitem 
+        id="menu_bulk_mapping_wizard"
+        name="Bulk Mapping Wizard"
+        parent="menu_git_integration_root"
+        action="action_bulk_mapping_wizard_menu"
+        sequence="40"/>
+
+    <!-- Add Git Integration to Project Menu -->
+    <menuitem 
+        id="menu_project_git_repositories"
+        name="Git Repositories"
+        parent="project.menu_project_config"
+        action="action_git_repository"
+        sequence="50"/>
+
+    <!-- Add to Timesheets Menu -->
+    <menuitem 
+        id="menu_timesheet_git_mappings"
+        name="Git Mappings"
+        parent="hr_timesheet.timesheet_menu_root"
+        action="action_timesheet_commit_mapping"
+        sequence="15"/>
+
+</odoo>
