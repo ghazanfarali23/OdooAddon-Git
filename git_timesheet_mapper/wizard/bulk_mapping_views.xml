@@ -7,35 +7,30 @@
         <field name="arch" type="xml">
             <form string="Bulk Commit Mapping">
                 <header>
-                    <!-- Progress Bar -->
+                    <!-- Progress Information -->
                     <div class="o_form_header_progress">
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped" 
-                                 t-att-style="'width: ' + record.progress_percentage.value + '%'">
-                                <t t-esc="Math.round(record.progress_percentage.value)"/>%
-                            </div>
-                        </div>
+                        <field name="progress_percentage" widget="progressbar"/>
                     </div>
                     
                     <!-- Navigation Buttons -->
                     <button name="action_previous_step" string="Previous" type="object" 
                             class="btn-secondary" icon="fa-arrow-left"
-                            attrs="{'invisible': [('state', 'in', ['select_commits', 'processing', 'complete'])]}"/>
+                            invisible="state in ['select_commits', 'processing', 'complete']"/>
                     
                     <button name="action_next_step" string="Next" type="object" 
                             class="btn-primary" icon="fa-arrow-right"
-                            attrs="{'invisible': [('state', 'in', ['processing', 'complete'])]}"/>
+                            invisible="state in ['processing', 'complete']"/>
                     
                     <button name="action_process_mappings" string="Create Mappings" type="object" 
                             class="btn-success" icon="fa-play"
-                            attrs="{'invisible': [('state', '!=', 'preview')]}"/>
+                            invisible="state != 'preview'"/>
                     
                     <button name="action_view_created_mappings" string="View Mappings" type="object" 
                             class="btn-info" icon="fa-eye"
-                            attrs="{'invisible': [('state', '!=', 'complete')]}"/>
+                            invisible="state != 'complete'"/>
                     
                     <button string="Close" special="cancel" class="btn-secondary"
-                            attrs="{'invisible': [('state', '!=', 'complete')]}"/>
+                            invisible="state != 'complete'"/>
                 </header>
                 
                 <sheet>
@@ -44,11 +39,11 @@
                     </div>
                     
                     <!-- Step 1: Select Commits -->
-                    <div attrs="{'invisible': [('state', '!=', 'select_commits')]}">
+                    <div invisible="state != 'select_commits'">
                         <group string="Repository and Filters">
                             <group>
                                 <field name="repository_id" options="{'no_create': True}"/>
-                                <field name="branch_name" attrs="{'invisible': [('repository_id', '=', False)]}"/>
+                                <field name="branch_name" invisible="repository_id == False"/>
                                 <field name="commit_type"/>
                                 <field name="only_unmapped"/>
                             </group>
@@ -83,7 +78,7 @@
                         <field name="selected_commit_ids" nolabel="1" 
                                context="{'default_repository_id': repository_id}"
                                domain="[('id', 'in', available_commit_ids)]">
-                            <tree string="Select Commits" editable="false" 
+                            <list string="Select Commits" editable="false" 
                                   decoration-info="commit_type == 'feature'"
                                   decoration-warning="commit_type == 'bugfix'"
                                   decoration-muted="commit_type == 'chore'">
@@ -96,37 +91,37 @@
                                 <field name="files_changed"/>
                                 <field name="total_changes"/>
                                 <field name="is_mapped" widget="boolean" readonly="1"/>
-                            </tree>
+                            </list>
                         </field>
                         
                         <div class="text-muted mt-2" 
-                             attrs="{'invisible': [('commit_count', '>', 0)]}">
+                             invisible="commit_count > 0">
                             <p><i class="fa fa-info-circle"/> No commits found with current filters.</p>
                             <p>Try adjusting the date range, branch, or other filter criteria.</p>
                         </div>
                     </div>
                     
                     <!-- Step 2: Select Timesheet -->
-                    <div attrs="{'invisible': [('state', '!=', 'select_timesheet')]}">
+                    <div invisible="state != 'select_timesheet'">
                         <group string="Target Selection">
                             <field name="timesheet_selection_mode" widget="radio" options="{'horizontal': true}"/>
                         </group>
                         
                         <group string="Timesheet Target" 
-                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'single')]}">
+                               invisible="timesheet_selection_mode != 'single'">
                             <field name="target_timesheet_id" nolabel="1" 
                                    placeholder="Select a specific timesheet entry"/>
                         </group>
                         
                         <group string="Project Target" col="2"
-                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'project')]}">
+                               invisible="timesheet_selection_mode != 'project'">
                             <field name="target_project_id"/>
                             <field name="timesheet_date_from"/>
                             <field name="timesheet_date_to"/>
                         </group>
                         
                         <group string="Task Target" col="2"
-                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'task')]}">
+                               invisible="timesheet_selection_mode != 'task'">
                             <field name="target_project_id"/>
                             <field name="target_task_id"/>
                             <field name="timesheet_date_from"/>
@@ -134,7 +129,7 @@
                         </group>
                         
                         <group string="Employee Target" col="2"
-                               attrs="{'invisible': [('timesheet_selection_mode', '!=', 'employee')]}">
+                               invisible="timesheet_selection_mode != 'employee'">
                             <field name="target_employee_id"/>
                             <field name="timesheet_date_from"/>
                             <field name="timesheet_date_to"/>
@@ -143,27 +138,21 @@
                         <group string="Target Timesheets" class="timesheet_preview_group">
                             <div class="text-info">
                                 <field name="target_timesheet_ids" nolabel="1" readonly="1">
-                                    <tree string="Target Timesheets" create="false" edit="false" limit="10">
+                                    <list string="Target Timesheets" create="false" edit="false" limit="10">
                                         <field name="name"/>
                                         <field name="project_id"/>
                                         <field name="task_id"/>
                                         <field name="employee_id"/>
                                         <field name="date"/>
                                         <field name="unit_amount" widget="float_time"/>
-                                    </tree>
+                                    </list>
                                 </field>
-                                <div class="mt-2 text-muted" t-if="len(target_timesheet_ids) == 0">
-                                    <p><i class="fa fa-warning"/> No timesheet entries found with current criteria.</p>
-                                </div>
-                                <div class="mt-2 text-success" t-if="len(target_timesheet_ids) > 0">
-                                    <p><i class="fa fa-check"/> Found <t t-esc="len(target_timesheet_ids)"/> timesheet entries.</p>
-                                </div>
                             </div>
                         </group>
                     </div>
                     
                     <!-- Step 3: Preview Mappings -->
-                    <div attrs="{'invisible': [('state', '!=', 'preview')]}">
+                    <div invisible="state != 'preview'">
                         <group string="Mapping Configuration">
                             <group>
                                 <field name="mapping_method"/>
@@ -177,13 +166,13 @@
                         <group string="Preview Mappings">
                             <div class="alert alert-info">
                                 <strong>Preview:</strong> 
-                                <t t-esc="len(selected_commit_ids)"/> commits will be mapped to 
-                                <t t-esc="len(target_timesheet_ids)"/> timesheet entries.
+                                <field name="selected_commit_count" readonly="1"/> commits will be mapped to 
+                                <field name="target_timesheet_count" readonly="1"/> timesheet entries.
                             </div>
                         </group>
                         
                         <field name="preview_mapping_ids" nolabel="1" readonly="1">
-                            <tree string="Mapping Preview" create="false" edit="false">
+                            <list string="Mapping Preview" create="false" edit="false">
                                 <field name="commit_hash"/>
                                 <field name="commit_message"/>
                                 <field name="commit_author"/>
@@ -192,18 +181,12 @@
                                 <field name="task_name"/>
                                 <field name="confidence_score" widget="progressbar"/>
                                 <field name="mapping_method" widget="badge"/>
-                            </tree>
+                            </list>
                         </field>
-                        
-                        <div class="alert alert-warning mt-3" 
-                             t-if="len(preview_mapping_ids) == 0">
-                            <strong>Warning:</strong> No mappings will be created. 
-                            Please go back and check your selections.
-                        </div>
                     </div>
                     
                     <!-- Step 4: Processing -->
-                    <div attrs="{'invisible': [('state', '!=', 'processing')]}">
+                    <div invisible="state != 'processing'">
                         <group string="Processing Status">
                             <div class="text-center">
                                 <i class="fa fa-spinner fa-spin fa-2x text-primary mb-3"/>
@@ -229,7 +212,7 @@
                     </div>
                     
                     <!-- Step 5: Complete -->
-                    <div attrs="{'invisible': [('state', '!=', 'complete')]}">
+                    <div invisible="state != 'complete'">
                         <group string="Results Summary">
                             <div class="text-center">
                                 <i class="fa fa-check-circle fa-3x text-success mb-3"/>
@@ -260,7 +243,7 @@
                                         <div class="card text-center">
                                             <div class="card-body">
                                                 <h5 class="card-title text-info">
-                                                    <t t-esc="record.mappings_created.value + record.mappings_failed.value"/>
+                                                    <field name="total_processed" readonly="1"/>
                                                 </h5>
                                                 <p class="card-text">Total Processed</p>
                                             </div>
@@ -268,15 +251,9 @@
                                     </div>
                                 </div>
                                 
-                                <div class="mt-4" attrs="{'invisible': [('mappings_failed', '=', 0)]}">
-                                    <button type="button" class="btn btn-link" data-toggle="collapse" 
-                                            data-target="#errorLog" aria-expanded="false">
-                                        <i class="fa fa-exclamation-triangle"/> View Error Details
-                                    </button>
-                                    <div class="collapse mt-2" id="errorLog">
-                                        <div class="card card-body">
-                                            <field name="error_log" readonly="1" widget="text"/>
-                                        </div>
+                                <div class="mt-4" invisible="mappings_failed == 0">
+                                    <div class="card card-body">
+                                        <field name="error_log" readonly="1" widget="text"/>
                                     </div>
                                 </div>
                             </div>
@@ -292,7 +269,7 @@
         <field name="name">bulk.mapping.preview.tree</field>
         <field name="model">bulk.mapping.preview</field>
         <field name="arch" type="xml">
-            <tree string="Mapping Preview" create="false" edit="false" delete="false">
+            <list string="Mapping Preview" create="false" edit="false" delete="false">
                 <field name="commit_hash"/>
                 <field name="commit_message"/>
                 <field name="commit_author"/>
@@ -301,7 +278,7 @@
                 <field name="task_name"/>
                 <field name="confidence_score" widget="progressbar"/>
                 <field name="mapping_method" widget="badge"/>
-            </tree>
+            </list>
         </field>
     </record>
 
