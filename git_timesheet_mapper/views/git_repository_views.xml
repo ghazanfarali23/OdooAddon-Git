@@ -68,11 +68,10 @@
                                attrs="{'invisible': [('connection_error', '=', False)]}"/>
                     </group>
                     
-                    <group string="Statistics" name="stats_group" col="4">
+                    <group string="Statistics" name="stats_group" col="3">
                         <field name="total_commits" readonly="1"/>
                         <field name="mapped_commits" readonly="1"/>
                         <field name="unmapped_commits" readonly="1"/>
-                        <field name="last_commit_date" readonly="1"/>
                     </group>
                     
                     <notebook>
