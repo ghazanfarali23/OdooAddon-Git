@@ -21,11 +21,6 @@ class GitLabService(models.TransientModel):
     _name = 'gitlab.service'
     _description = 'GitLab API Service'
     
-    def __init__(self, pool, cr):
-        """Initialize GitLab service."""
-        super().__init__(pool, cr)
-        self.session = None
-    
     def _get_session(self, access_token=None):
         """Get configured requests session with authentication.
         
@@ -35,19 +30,15 @@ class GitLabService(models.TransientModel):
         Returns:
             requests.Session: Configured session
         """
-        if not self.session:
-            self.session = requests.Session()
-            self.session.headers.update({
-                'User-Agent': 'Odoo-Git-Timesheet-Mapper/1.0'
-            })
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Odoo-Git-Timesheet-Mapper/1.0'
+        })
         
         if access_token:
-            self.session.headers['Private-Token'] = access_token
-        elif 'Private-Token' in self.session.headers:
-            # Remove old token if no new token provided
-            del self.session.headers['Private-Token']
+            session.headers['Private-Token'] = access_token
         
-        return self.session
+        return session
     
     def _get_gitlab_base_url(self, repository_url):
         """Extract GitLab instance base URL from repository URL.
@@ -683,8 +674,3 @@ class GitLabService(models.TransientModel):
                 'packages_size': 0,
                 'snippets_size': 0
             }
-    
-    def __del__(self):
-        """Cleanup session on service destruction."""
-        if hasattr(self, 'session') and self.session:
-            self.session.close()

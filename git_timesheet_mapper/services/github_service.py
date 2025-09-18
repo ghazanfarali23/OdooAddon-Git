@@ -20,11 +20,10 @@ class GitHubService(models.TransientModel):
     _name = 'github.service'
     _description = 'GitHub API Service'
     
-    def __init__(self, pool, cr):
-        """Initialize GitHub service."""
-        super().__init__(pool, cr)
-        self.base_url = 'https://api.github.com'
-        self.session = None
+    @api.model
+    def _get_base_url(self):
+        """Get GitHub API base URL."""
+        return 'https://api.github.com'
     
     def _get_session(self, access_token=None):
         """Get configured requests session with authentication.
@@ -35,20 +34,16 @@ class GitHubService(models.TransientModel):
         Returns:
             requests.Session: Configured session
         """
-        if not self.session:
-            self.session = requests.Session()
-            self.session.headers.update({
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'Odoo-Git-Timesheet-Mapper/1.0'
-            })
+        session = requests.Session()
+        session.headers.update({
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Odoo-Git-Timesheet-Mapper/1.0'
+        })
         
         if access_token:
-            self.session.headers['Authorization'] = f'token {access_token}'
-        elif 'Authorization' in self.session.headers:
-            # Remove old token if no new token provided
-            del self.session.headers['Authorization']
+            session.headers['Authorization'] = f'token {access_token}'
         
-        return self.session
+        return session
     
     def _make_request(self, method, url, access_token=None, **kwargs):
         """Make authenticated request to GitHub API.
@@ -66,7 +61,8 @@ class GitHubService(models.TransientModel):
             UserError: For API errors or network issues
         """
         if not url.startswith('http'):
-            url = f"{self.base_url}/{url.lstrip('/')}"
+            base_url = self._get_base_url()
+            url = f"{base_url}/{url.lstrip('/')}"
         
         session = self._get_session(access_token)
         
@@ -585,8 +581,3 @@ class GitHubService(models.TransientModel):
                 'core': {'limit': 0, 'remaining': 0, 'reset': None, 'used': 0},
                 'search': {'limit': 0, 'remaining': 0, 'reset': None, 'used': 0}
             }
-    
-    def __del__(self):
-        """Cleanup session on service destruction."""
-        if hasattr(self, 'session') and self.session:
-            self.session.close()
