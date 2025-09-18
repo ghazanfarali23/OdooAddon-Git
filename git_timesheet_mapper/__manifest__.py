@@ -40,8 +40,8 @@
         ],
     },
     'data': [
-        'security/ir.model.access.csv',
         'security/security.xml',
+        'security/ir.model.access.csv',
         'data/data.xml',
         'data/assets.xml',
         'views/git_repository_views.xml',
