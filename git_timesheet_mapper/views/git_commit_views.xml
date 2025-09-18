@@ -306,15 +306,4 @@
         </field>
     </record>
 
-    <!-- Commit Mapping Wizard Action -->
-    <record id="action_commit_mapping_wizard" model="ir.actions.act_window">
-        <field name="name">Create Commit Mapping</field>
-        <field name="res_model">commit.mapping.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-        <field name="context">{
-            'default_commit_id': active_id,
-        }</field>
-    </record>
-
 </odoo>
