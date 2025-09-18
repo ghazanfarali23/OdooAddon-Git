@@ -247,13 +247,6 @@
                 <filter string="GitLab" name="filter_gitlab" 
                         domain="[('repository_type', '=', 'gitlab')]"/>
                 <separator/>
-                <filter string="Has Commits" name="filter_has_commits" 
-                        domain="[('total_commits', '>', 0)]"/>
-                <filter string="No Commits" name="filter_no_commits" 
-                        domain="[('total_commits', '=', 0)]"/>
-                <filter string="Has Mappings" name="filter_has_mappings" 
-                        domain="[('mapped_commits', '>', 0)]"/>
-                <separator/>
                 <filter string="Synced Today" name="filter_synced_today" 
                         domain="[('last_sync_date', '>=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
                 <filter string="Synced This Week" name="filter_synced_week" 
