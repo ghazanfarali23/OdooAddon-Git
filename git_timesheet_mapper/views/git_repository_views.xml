@@ -73,48 +73,7 @@
                         <field name="mapped_commits" readonly="1"/>
                         <field name="unmapped_commits" readonly="1"/>
                     </group>
-                    
-                    <notebook>
-                        <page string="Repository Details" name="details">
-                            <group>
-                                <field name="description" nolabel="1" placeholder="Repository description..."/>
-                            </group>
-                        </page>
-                        
-                        <page string="Recent Commits" name="recent_commits" 
-                              attrs="{'invisible': [('total_commits', '=', 0)]}">
-                            <field name="commit_ids" readonly="1" nolabel="1">
-                                <tree string="Recent Commits" limit="10" create="false" edit="false">
-                                    <field name="commit_hash"/>
-                                    <field name="short_hash"/>
-                                    <field name="author_name"/>
-                                    <field name="commit_message_short"/>
-                                    <field name="commit_date"/>
-                                    <field name="default_branch"/>
-                                    <field name="is_mapped" widget="boolean_toggle"/>
-                                    <field name="mapped_commits"/>
-                                </tree>
-                            </field>
-                        </page>
-                        
-                        <page string="Sync History" name="sync_history">
-                            <field name="sync_log_ids" readonly="1" nolabel="1">
-                                <tree string="Sync History" create="false" edit="false">
-                                    <field name="sync_date"/>
-                                    <field name="sync_type"/>
-                                    <field name="commits_fetched"/>
-                                    <field name="status"/>
-                                    <field name="error_message"/>
-                                </tree>
-                            </field>
-                        </page>
-                    </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
